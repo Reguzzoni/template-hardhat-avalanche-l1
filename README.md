@@ -27,7 +27,7 @@ The private_avalanche_isp_climatekick_l1_test network is set by default in the h
 It is also possible to execute a flow that creates a full ledger DvP transaction using a custom ERC20 token and a commercial paper.
 
 ```shell
-executeHLCFullLedger.bat
+./utils/executeHLCFullLedger.bat
 ```
 
 This flow is based on the scInfo.json file, which contains the information about the deployed smart contract.
@@ -35,7 +35,7 @@ This flow is based on the scInfo.json file, which contains the information about
 To reset the scInfo.json, you can use the following .bat file:
 
 ```shell
-resetScInfo.bat
+./utils/resetScInfo.bat
 ```
 
 ### Steps HLC flow
@@ -105,7 +105,7 @@ call npx hardhat run ./scripts/HLC/5_execute_dvp.js
 In order to generate a report of slither, execute the .bat file:
 
 ```shell
-runSlitherReport.bat
+./utils/runSlitherReport.bat
 ```
 
 It will create a report on the slither folder slitherReport.
@@ -134,4 +134,12 @@ RPC_URL_AVALANCHE_L1_TEST RPC URL of the avalanche network
 
 ```shell
 RPC_BEARER_TOKEN_AVALANCHE_L1_TEST Bearer token of the avalanche network
+```
+
+## ABI and bin extract
+
+In order to extract the abi and the bin of a contract, you can use the following command:
+
+```shell
+node ./utils/extractAbiByteCode.js
 ```
