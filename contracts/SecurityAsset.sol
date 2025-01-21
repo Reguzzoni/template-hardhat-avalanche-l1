@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
@@ -21,7 +21,7 @@ abstract contract SecurityAsset is
     ISecurityAsset,
     AccessControl
 {
-    Status private _status = Status.Preliminary;   
+    Status private _status = Status.Preliminary;
     uint8 private _decimals;
     Type private _securityType;
     bytes32 public constant ISSUER = keccak256("ISSUER");
@@ -39,8 +39,6 @@ abstract contract SecurityAsset is
     string private _checksum;
     string private _name;
     string private _symbol;
-
-
 
     // Modifiers
 
@@ -118,8 +116,6 @@ abstract contract SecurityAsset is
         uint256 cap_,
         address restrictionsSmartContract_,
         address issuer_
-
-      
     ) ERC20Capped(cap_) ERC20(name_, symbol_) {
         _setRoleAdmin(ISSUER, ISSUER_ADMIN);
 
@@ -127,8 +123,23 @@ abstract contract SecurityAsset is
 
         _grantIssuerRoles(issuer_);
 
-  emit Initialized(securityType_, isLive_, name_, symbol_, isin_, issuanceCountry_, currency_, maturity_, minimumDenomination_, addInfoUri_, checksum_, cap_, restrictionsSmartContract_, issuer_);
-        
+        emit Initialized(
+            securityType_,
+            isLive_,
+            name_,
+            symbol_,
+            isin_,
+            issuanceCountry_,
+            currency_,
+            maturity_,
+            minimumDenomination_,
+            addInfoUri_,
+            checksum_,
+            cap_,
+            restrictionsSmartContract_,
+            issuer_
+        );
+
         if (isLive_) _status = Status.Live;
         _name = name_;
         _symbol = symbol_;
@@ -141,9 +152,8 @@ abstract contract SecurityAsset is
         _addInfoUri = addInfoUri_;
         _checksum = checksum_;
         _restrictionsSmartContract = restrictionsSmartContract_;
-        _issuer = issuer_; 
+        _issuer = issuer_;
         _decimals = 0;
-        
     }
 
     // Business functions
@@ -232,17 +242,15 @@ abstract contract SecurityAsset is
             "Input arrays must have the same length"
         );
 
-        (bool allWhitelisted, ) = Restrictions(_restrictionsSmartContract).checkWhitelistStatus(accounts_);
-        require(allWhitelisted, "one or more addresses is not whitelisted"); 
-    
-        for (uint256 i=0; i<accountCount;++i){
-          _mint(accounts_[i], amounts_[i]);
+        (bool allWhitelisted, ) = Restrictions(_restrictionsSmartContract)
+            .checkWhitelistStatus(accounts_);
+        require(allWhitelisted, "one or more addresses is not whitelisted");
+
+        for (uint256 i = 0; i < accountCount; ++i) {
+            _mint(accounts_[i], amounts_[i]);
         }
         emit BatchMint(accounts_, amounts_);
     }
-    
-    
-
 
     /**
      * @dev Add an issuer with the necessary roles.
@@ -278,7 +286,6 @@ abstract contract SecurityAsset is
         _revokeRole(ISSUER_ADMIN, issuer_);
     }
 
-
     /**
      * @dev checks if an escrow address is part of the mapping or not
      * @param escrow_ The account to check the address of in the mapping.
@@ -292,21 +299,20 @@ abstract contract SecurityAsset is
      * @param escrow_ The account to add the address to the mapping.
      * Event emitted with the escrow address and string to show "added"
      */
-function addEscrow(address escrow_) external onlyIssuerOrRegistrar{
-_redemptionEscrowContracts[escrow_] = true;
+    function addEscrow(address escrow_) external onlyIssuerOrRegistrar {
+        _redemptionEscrowContracts[escrow_] = true;
 
-emit EscrowListChanged(escrow_,"added");
-}
+        emit EscrowListChanged(escrow_, "added");
+    }
     /**
      * @dev Remove a contract from the mapping of escrow contracts which can transfer tokens after maturity.
      * @param escrow_ The account to remove the address from the mapping.
      * Event emitted with the escrow address and string to show "removed"
      */
-function removeEscrow(address escrow_) external onlyIssuerOrRegistrar{
-_redemptionEscrowContracts[escrow_] = false;
-emit EscrowListChanged(escrow_,"removed");
-}
-
+    function removeEscrow(address escrow_) external onlyIssuerOrRegistrar {
+        _redemptionEscrowContracts[escrow_] = false;
+        emit EscrowListChanged(escrow_, "removed");
+    }
 
     /**
      * @dev Internal function to grant issuer roles to an account.
@@ -374,46 +380,49 @@ emit EscrowListChanged(escrow_,"removed");
         whenNotGlobalPaused
         returns (bool)
     {
-        if ( _status == Status.Live){
-        require(
-            Restrictions(_restrictionsSmartContract).isWhitelisted(msg.sender),
-            "Your account is not whitelisted"
-        );
-        require(
-            Restrictions(_restrictionsSmartContract).isWhitelisted(to),
-            "recipient is not whitelisted"
-        );
-        require(
-            amount % _minimumDenomination == 0,
-            "amount must be multiple of minimumDenomination value"
-        );
-        _transfer(msg.sender, to, amount);
+        if (_status == Status.Live) {
+            require(
+                Restrictions(_restrictionsSmartContract).isWhitelisted(
+                    msg.sender
+                ),
+                "Your account is not whitelisted"
+            );
+            require(
+                Restrictions(_restrictionsSmartContract).isWhitelisted(to),
+                "recipient is not whitelisted"
+            );
+            require(
+                amount % _minimumDenomination == 0,
+                "amount must be multiple of minimumDenomination value"
+            );
+            _transfer(msg.sender, to, amount);
 
             return true;
-        }
+        } else if (_status == Status.Matured) {
+            require(
+                Restrictions(_restrictionsSmartContract).isWhitelisted(
+                    msg.sender
+                ),
+                "Your account is not whitelisted"
+            );
+            require(
+                amount % _minimumDenomination == 0,
+                "amount must be multiple of minimumDenomination value"
+            );
+            require(
+                to == _issuer || _redemptionEscrowContracts[to],
+                "the address must be the issuer or an authorised escrow contract"
+            );
+            _transfer(msg.sender, to, amount);
 
-        else if (_status ==Status.Matured){
-        require(
-            Restrictions(_restrictionsSmartContract).isWhitelisted(msg.sender),
-            "Your account is not whitelisted"
-        );
-        require(
-            amount % _minimumDenomination == 0,
-            "amount must be multiple of minimumDenomination value"
-        );
-        require (to==_issuer || _redemptionEscrowContracts[to], "the address must be the issuer or an authorised escrow contract");
-        _transfer(msg.sender, to, amount);
-
-        return true;
-        }
-        else {
-
-            revert ("contract must be in live or matured state");
+            return true;
+        } else {
+            revert("contract must be in live or matured state");
         }
     }
- 
+
     /**
-     * @dev Transfer tokens from a sender to a recipient address. If the status is live you can transfer to any whitelisted address, 
+     * @dev Transfer tokens from a sender to a recipient address. If the status is live you can transfer to any whitelisted address,
      * if the status is matured you can transfer only to the issuer or an escrow contract.
      * @param recipient The address to transfer tokens to.
      * @param sender The address to transfer tokens from.
@@ -426,48 +435,50 @@ emit EscrowListChanged(escrow_,"removed");
         address recipient,
         uint256 amount
     )
-    onlyIssuerOrRegistrar
         public
         override(ERC20, IERC20)
+        // onlyIssuerOrRegistrar
         whenNotPaused
         whenNotGlobalPaused
         returns (bool)
     {
-        if ( _status == Status.Live){
-        require(
-            Restrictions(_restrictionsSmartContract).isWhitelisted(sender),
-            "Sender is not whitelisted"
-        );
-        require(
-            Restrictions(_restrictionsSmartContract).isWhitelisted(recipient),
-            "recipient is not whitelisted"
-        );
-        _transfer(sender, recipient, amount);
+        if (_status == Status.Live) {
+            require(
+                Restrictions(_restrictionsSmartContract).isWhitelisted(sender),
+                "Sender is not whitelisted"
+            );
+            require(
+                Restrictions(_restrictionsSmartContract).isWhitelisted(
+                    recipient
+                ),
+                "recipient is not whitelisted"
+            );
+            _transfer(sender, recipient, amount);
 
- 
             return true;
-        }
-                else if (_status ==Status.Matured){
-        require(
-            Restrictions(_restrictionsSmartContract).isWhitelisted(sender),
-            "Your account is not whitelisted"
-        );
-                require(
-            Restrictions(_restrictionsSmartContract).isWhitelisted(recipient),
-            "recipient is not whitelisted"
-        );
+        } else if (_status == Status.Matured) {
+            require(
+                Restrictions(_restrictionsSmartContract).isWhitelisted(sender),
+                "Your account is not whitelisted"
+            );
+            require(
+                Restrictions(_restrictionsSmartContract).isWhitelisted(
+                    recipient
+                ),
+                "recipient is not whitelisted"
+            );
 
-        require (recipient==_issuer || _redemptionEscrowContracts[recipient], "the address must be the issuer or an authorised escrow contract");
-        _transfer(sender, recipient, amount);
+            require(
+                recipient == _issuer || _redemptionEscrowContracts[recipient],
+                "the address must be the issuer or an authorised escrow contract"
+            );
+            _transfer(sender, recipient, amount);
 
-  
-        return true;
-        }
-        else {
+            return true;
+        } else {
             return false;
         }
-}
-    
+    }
 
     /**
      * @dev Get the balance of tokens for a specific account.
@@ -582,9 +593,7 @@ emit EscrowListChanged(escrow_,"removed");
      * @dev Set the ISIN (International Securities Identification Number) for the security asset.
      * @param isin_ The new ISIN to set.
      */
-    function setISIN(
-        string calldata isin_
-    ) external override onlyRegistrar {
+    function setISIN(string calldata isin_) external override onlyRegistrar {
         require(
             _status == Status.Preliminary,
             "contract is not in Preliminary status"
@@ -723,9 +732,7 @@ emit EscrowListChanged(escrow_,"removed");
      * @dev Set the name for the security asset.
      * @param name_ The new name to set.
      */
-    function setName(
-        string calldata name_
-    ) external override onlyRegistrar {
+    function setName(string calldata name_) external override onlyRegistrar {
         require(
             _status == Status.Preliminary,
             "contract is not in Preliminary status"
@@ -755,9 +762,7 @@ emit EscrowListChanged(escrow_,"removed");
      * @dev Set a new issuer for the security asset.
      * @param issuer_ The address of the new issuer.
      */
-    function setIssuer(
-        address issuer_
-    ) external override onlyRegistrar {
+    function setIssuer(address issuer_) external override onlyRegistrar {
         require(
             _status == Status.Preliminary,
             "contract is not in Preliminary status"

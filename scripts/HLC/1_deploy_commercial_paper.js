@@ -1,5 +1,9 @@
 // scripts/deploy_restrictions.js
 const { ethers } = require("hardhat");
+let scInfo = require("../../scInfo.json");
+const fs = require("fs");
+
+const restrictionsAddress = scInfo.restrictionsAddress;
 
 async function main() {
     const accounts = await ethers.getSigners();
@@ -18,10 +22,14 @@ async function main() {
     const addInfoUri = "https://www.documentation.com";
     const checksum = "checksum";
     const cap = 1;
-    const restrictionsAddress = "0x3bA78c17a2cA9842Edf008E98ab496Cad9f4C1Eb";
     const issuerAddress = issuer.address;
 
-    console.log("Deploying CommercialPaper with the account:", registrar.address);
+    console.log(
+        "Deploying CommercialPaper with the account:",
+        registrar.address,
+        " and restriction address:",
+        restrictionsAddress
+    );
 
     // Deploy Restrictions
     const commercialPaperContract = await hre.ethers.deployContract(
@@ -46,8 +54,14 @@ async function main() {
     await commercialPaperContract.waitForDeployment();
     console.log("CommercialPaper contract deployed with address:", commercialPaperContract.target);
 
+    scInfo.commercialPaperAddress = commercialPaperContract.target;
+
     await commercialPaperContract.mint(issuer.address, cap, { from: registrar });
     console.log("Minted " + cap + " " + symbol + " to issuer successfully");
+
+    await fs.writeFileSync("scInfo.json", JSON.stringify(scInfo), "utf-8", (err) => {
+        if (err) console.log("Error writing file cause:", err);
+    });
 }
 
 main()

@@ -1,21 +1,16 @@
 // SPDX-License-Identifier: CC0-1.0
 
-
-
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "./SecurityAsset.sol";
 
 import "./lib/HLClib.sol";
-
-
 
 /// @title HLC (Hash Link Contract)
 
 /// @dev A contract that facilitates Delivery versus Payment (DvP) transactions using hash-linked contracts.
 
 contract HLC {
-
     //-------------------------------------//
 
     //--------------- STATE ---------------//
@@ -32,13 +27,11 @@ contract HLC {
 
     bytes public TIPS_ID; // <-- tips_trx_id tip environment
 
-    bytes32 public immutable HASH_EXECUTION_KEY; // <-- hash_execution_key to force execution
+    uint public immutable EXPIRE_TIME; // <-- expire time
 
-    bytes32 public immutable HASH_CANCELLATION_KEY; // <-- hash_cancellation_key to force cancellation
-
-    HLClib.Status public hlcStatus;
-
-
+    HLClib.StatusHLC public hlcStatus;
+    HLClib.StatusAssetLeg public assetLegStatus;
+    HLClib.StatusPaymentLeg public paymentLegStatus;
 
     //-------------------------------------//
 
@@ -46,11 +39,11 @@ contract HLC {
 
     //-------------------------------------//
 
-    SecurityAsset public immutable TOKEN;
+    SecurityAsset public immutable ASSET_TOKEN;
+    ERC20 public immutable PAYMENT_TOKEN;
 
-    uint public immutable TOKEN_AMOUNT;
-
-
+    uint public immutable ASSET_TOKEN_AMOUNT;
+    uint public immutable PAYMENT_TOKEN_AMOUNT;
 
     //----------------------------------------//
 
@@ -68,27 +61,29 @@ contract HLC {
 
     error StatusNotInizializedError();
 
+    error StatusAlreadyDepositedError();
+
+    error ExpiredError();
+
+    error InvalidMasterError();
+
+    error StatusNotAlreadyDepositedError();
+
     error SellerAndBuyerAreSameError();
 
     error InvalidCancellationKeyError();
 
     error InvalidTokenAmountError();
 
+    error InvalidExpireTimeError();
+
     error InvalidPriceError();
-
-
-
-    error InvalidExecutionKeyError();
-
-    error InvalidCancellationKey();
-
-    
 
     error FailedTransferError();
 
     error SellerInsufficientFundsError();
 
-
+    error BuyerInsufficientFundsError();
 
     //----------------------------------------//
 
@@ -96,212 +91,147 @@ contract HLC {
 
     //----------------------------------------//
 
-
-
     modifier onlySeller() {
-
-        if(msg.sender != SELLER) {
-
+        if (msg.sender != SELLER) {
             revert InvalidSellerError();
-
         }
 
         _;
-
     }
-
-
 
     modifier onlyBuyer() {
-
-        if(msg.sender != BUYER) {
-
+        if (msg.sender != BUYER) {
             revert InvalidBuyerError();
-
         }
 
         _;
-
     }
-
-
 
     modifier onlyInitialized() {
-
-        if(hlcStatus != HLClib.Status.Inizialized) {
-
+        if (hlcStatus != HLClib.StatusHLC.Inizialized) {
             revert StatusNotInizializedError();
-
         }
 
         _;
-
     }
 
+    modifier notAlreadyDepositedAssetToken() {
+        if (assetLegStatus == HLClib.StatusAssetLeg.Deposited) {
+            revert StatusAlreadyDepositedError();
+        }
 
+        _;
+    }
 
-    //------------------------------------------//
+    modifier alreadyDepositedAssetToken() {
+        if (assetLegStatus != HLClib.StatusAssetLeg.Deposited) {
+            revert StatusAlreadyDepositedError();
+        }
 
-    //--------------- CONSTRUCTOR --------------//
+        _;
+    }
 
-    //------------------------------------------//
+    modifier notAlreadyDepositedPaymentToken() {
+        if (paymentLegStatus == HLClib.StatusPaymentLeg.Deposited) {
+            revert StatusAlreadyDepositedError();
+        }
 
+        _;
+    }
 
+    modifier alreadyDepositedPaymentToken() {
+        if (paymentLegStatus != HLClib.StatusPaymentLeg.Deposited) {
+            revert StatusAlreadyDepositedError();
+        }
 
-    /// @dev Initializes a new instance of the HLC (Hash Link Contract) contract.
+        _;
+    }
 
-    /// @param _seller The address of the seller participating in the DvP.
+    modifier isNotExpired() {
+        if (block.timestamp > EXPIRE_TIME) {
+            revert ExpiredError();
+        }
 
-    /// @param _buyer The address of the buyer participating in the DvP.
+        _;
+    }
 
-    /// @param _price The agreed price of the security token in euro.
+    modifier isMaster() {
+        if (MASTER != msg.sender) {
+            revert InvalidMasterError();
+        }
 
-    /// @param _tokenAmount The amount of security tokens to be exchanged.
-
-    /// @param _tipsId An identifier used by tips associated with the DvP.
-
-    /// @param _hashExecutionKey The hashed execution key required for forced execution.
-
-    /// @param _hashCancellationKey The hashed cancellation key required for forced cancellation.
-
-    /// @param _tokenAddress The address of the security token that represents the security token.
-
-    ///
-
-    /// Requirements:
-
-    /// - The master address cannot be zero and cannot be the seller or the buyer.
-
-    /// - The seller's address cannot be zero.
-
-    /// - The buyer's address cannot be zero and must be different from the seller's address.
-
-    /// - The hashExecutionKey cannot be empty.
-
-    /// - The hashCancellationKey cannot be empty.
-
-    /// - The token address cannot be zero.
-
-    /// - The seller must have at least one token balance.
-
-    /// - The price cannot be empty.
-
-    ///
-
-    /// Effects:
-
-    /// - Sets all the contract's state variables.
-
-    /// - Sets the contract status to "Initialized".
-
-    ///
-
-    /// Emits:
-
-    /// - "Initialized" event with the contract details.
+        _;
+    }
 
     constructor(
-
         address _seller,
-
         address _buyer,
-
         string memory _price,
-
-        uint _tokenAmount,
-
+        uint _assetTokenAmount,
+        uint _paymentTokenAmount,
         bytes memory _tipsId,
-
-        bytes32 _hashExecutionKey,
-
-        bytes32 _hashCancellationKey,
-
-        address _tokenAddress
-
+        address _assetTokenAddress,
+        address _paymentTokenAddress,
+        uint expireTime
     ) {
-
         // check address
-
-        if(msg.sender == address(0) || msg.sender == _seller) {
-
+        if (msg.sender == address(0) || msg.sender == _seller) {
             revert InvalidSenderError();
-
         }
 
-        if(_seller == address(0)) {
-
+        if (_seller == address(0)) {
             revert InvalidSellerError();
-
         }
 
-        if(_buyer == address(0)) {
-
+        if (_buyer == address(0)) {
             revert InvalidBuyerError();
-
         }
 
         if (_seller == _buyer) {
-
             revert SellerAndBuyerAreSameError();
-
         }
-
-        
 
         // implicitly check _buyer != msg.sender
-
-
-
-        if(_tokenAddress == address(0)) {
-
+        if (_assetTokenAddress == address(0)) {
             revert InvalidTokenError();
-
         }
 
-
+        if (_paymentTokenAddress == address(0)) {
+            revert InvalidTokenError();
+        }
 
         // check hlc info
 
-        if(bytes(_price).length == 0) {
-
+        if (bytes(_price).length == 0) {
             revert InvalidPriceError();
-
         }
 
-        if(_hashExecutionKey.length == 0) {
-
-            revert InvalidExecutionKeyError();
-
-        }
-
-        if(_hashCancellationKey.length == 0) {
-
-            revert InvalidCancellationKeyError();
-
-        }
-
-        if(_tokenAmount == 0) {
-
+        if (_assetTokenAmount == 0) {
             revert InvalidTokenAmountError();
-
         }
 
+        if (_paymentTokenAmount == 0) {
+            revert InvalidTokenAmountError();
+        }
 
+        if (expireTime == 0 || expireTime < block.timestamp) {
+            revert InvalidExpireTimeError();
+        }
 
         // check funds
+        ASSET_TOKEN = SecurityAsset(_assetTokenAddress);
 
-        TOKEN = SecurityAsset(_tokenAddress);
-
-        if(TOKEN.balanceOf(_seller) < _tokenAmount) {
-
+        if (ASSET_TOKEN.balanceOf(_seller) < _assetTokenAmount) {
             revert SellerInsufficientFundsError();
-
         }
 
+        PAYMENT_TOKEN = ERC20(_paymentTokenAddress);
 
+        if (PAYMENT_TOKEN.balanceOf(_buyer) < _paymentTokenAmount) {
+            revert BuyerInsufficientFundsError();
+        }
 
         // assignments
-
         MASTER = msg.sender;
 
         SELLER = _seller;
@@ -310,39 +240,29 @@ contract HLC {
 
         PRICE = _price;
 
-        TOKEN_AMOUNT = _tokenAmount;
+        ASSET_TOKEN_AMOUNT = _assetTokenAmount;
+
+        PAYMENT_TOKEN_AMOUNT = _paymentTokenAmount;
 
         TIPS_ID = _tipsId;
 
-        HASH_EXECUTION_KEY = _hashExecutionKey;
+        hlcStatus = HLClib.StatusHLC.Inizialized;
 
-        HASH_CANCELLATION_KEY = _hashCancellationKey;
-
-        hlcStatus = HLClib.Status.Inizialized;
-
-
+        EXPIRE_TIME = expireTime;
 
         // issue event
 
         emit HLClib.Initialized(
-
             SELLER,
-
             BUYER,
-
             PRICE,
-
-            TOKEN_AMOUNT,
-
+            ASSET_TOKEN_AMOUNT,
+            PAYMENT_TOKEN_AMOUNT,
             TIPS_ID,
-
-            _tokenAddress
-
+            _assetTokenAddress,
+            _paymentTokenAddress
         );
-
     }
-
-
 
     //----------------------------------------//
 
@@ -354,272 +274,146 @@ contract HLC {
 
     /// Receive and fallback aren't implemented to reject any incoming ether
 
-
-
     //----------------------------------------//
 
     //--------------- FUNCTIONS --------------//
 
     //----------------------------------------//
 
-
-
-    ///
-
-    /// @dev Allows the seller to execute the cooperative execution of the DvP.
-
-    ///
-
-    /// Requirements:
-
-    /// - Only the seller can call this function.
-
-    /// - The HLC must be in the 'Initialized' status.
-
-    ///
-
-    /// Effects:
-
-    /// - Transfers N security token from the seller to the buyer.
-
-    /// - Updates the HLC status to 'Executed'.
-
-    ///
-
-    /// Emits:
-
-    /// - 'CooperativeExecution' event with the seller and buyer addresses.
-
-    ///
-
-    function cooperativeExecution() external onlySeller onlyInitialized {
-
+    // WITHDRAW
+    function withdrawAssetToken()
+        external
+        onlySeller
+        onlyInitialized
+        alreadyDepositedAssetToken
+    {
         // update status
-
-        hlcStatus = HLClib.Status.Executed;
-
-
-
-        // execute transfer to the buyer
-
-        bool success = TOKEN.transfer(BUYER, TOKEN_AMOUNT);
-
-        if(!success) {
-
-            revert FailedTransferError();
-
-        }
-
-
-
-        // issue event
-
-        emit HLClib.CooperativeExecution(SELLER, BUYER);
-
-    }
-
-
-
-    /// @dev Allows the buyer to cancel the DvP cooperatively.
-
-    ///
-
-    /// Requirements:
-
-    /// - Only the buyer can call this function.
-
-    /// - The HLC must be in the 'Initialized' status.
-
-    ///
-
-    /// Effects:
-
-    /// - Transfers N security token from the buyer to the seller.
-
-    /// - Updates the HLC status to 'Cancelled'.
-
-    ///
-
-    /// Emits:
-
-    /// - 'CooperativeCancellation' event with the buyer and seller addresses.
-
-    function cooperativeCancellation() external onlyBuyer onlyInitialized {
-
-        // update status
-
-        hlcStatus = HLClib.Status.Cancelled;
-
-        
+        assetLegStatus = HLClib.StatusAssetLeg.Empty;
 
         // execute transfer to the seller
+        bool success = ASSET_TOKEN.transfer(SELLER, ASSET_TOKEN_AMOUNT);
 
-        bool success = TOKEN.transfer(SELLER, TOKEN_AMOUNT);
-
-        if(!success) {
-
+        if (!success) {
             revert FailedTransferError();
-
         }
-
-        
 
         // issue event
-
-        emit HLClib.CooperativeCancellation(BUYER, SELLER);
-
+        emit HLClib.AssetTokenWithdrawn(
+            msg.sender,
+            address(ASSET_TOKEN),
+            ASSET_TOKEN_AMOUNT
+        );
     }
 
-
-
-    /// @dev Allows to force the execution of the DvP by the buyer.
-
-    /// This function can only be called by the buyer when the HLC is in the 'Initialized' status.
-
-    /// The execution is forced by providing the `_executionKey` as a parameter, which will be validated against the stored hash.
-
-    ///
-
-    /// @param _executionKey The execution key provided by the buyer.
-
-    ///
-
-    /// Requirements:
-
-    /// - The caller must be the buyer of the HLC.
-
-    /// - The HLC must be in the 'Initialized' status.
-
-    /// - The provided `_executionKey` must match the stored hashExecutionKey.
-
-    ///
-
-    /// Effects:
-
-    /// - Transfers TOKEN_AMOUNT security token from the buyer to the seller.
-
-    /// - Updates the status of the HLC to 'Executed'.
-
-    ///
-
-    /// Emits:
-
-    /// - 'ForcedExecution' event with the buyer and seller addresses.
-
-    function forceExecution(
-
-        string memory _executionKey
-
-    ) external onlyBuyer onlyInitialized {
-
-        // check execution key
-
-        if ( HASH_EXECUTION_KEY != sha256(abi.encodePacked(_executionKey))) {
-
-            revert InvalidExecutionKeyError();
-
-        }
-
-
-
+    function withdrawPaymentToken()
+        external
+        onlyBuyer
+        onlyInitialized
+        alreadyDepositedPaymentToken
+    {
         // update status
-
-        hlcStatus = HLClib.Status.Executed;
-
-
-
-        // execute transfer to the seller
-
-        bool success = TOKEN.transfer(BUYER, TOKEN_AMOUNT);
-
-        if(!success) {
-
-            revert FailedTransferError();
-
-        }
-
-
-
-        // issue event
-
-        emit HLClib.ForcedExecution(BUYER, SELLER);
-
-    }
-
-
-
-    /// @dev Allows to force the cancellation of the DvP by the seller.
-
-    /// This function can only be called by the seller when the HLC is in the 'Initialized' status.
-
-    /// The cancellation is forced by providing the `_cancellationKey` as a parameter, which will be validated against the stored hash.
-
-    ///
-
-    /// @param _cancellationKey The cancellation key provided by the seller.
-
-    ///
-
-    /// Requirements:
-
-    /// - The caller must be the seller of the HLC.
-
-    /// - The HLC must be in the 'Initialized' status.
-
-    /// - The provided `_cancellationKey` must match the stored hashCancellationKey.
-
-    ///
-
-    /// Effects:
-
-    /// - Transfers TOKEN_AMOUNT security token from the seller to the buyer.
-
-    /// - Updates the status of the HLC to 'Cancelled'.
-
-    ///
-
-    /// Emits:
-
-    /// - 'ForcedCancellation' event with the seller and buyer addresses.
-
-    function forceCancellation(
-
-        string memory _cancellationKey
-
-    ) external onlySeller onlyInitialized {
-
-        // check cancellation key
-
-        if (HASH_CANCELLATION_KEY != sha256(abi.encodePacked(_cancellationKey))) {
-
-            revert InvalidCancellationKey();
-
-        }
-
-
-
-        // update status
-
-        hlcStatus = HLClib.Status.Cancelled;
-
-
+        paymentLegStatus = HLClib.StatusPaymentLeg.Empty;
 
         // execute transfer to the buyer
+        bool success = PAYMENT_TOKEN.transfer(BUYER, PAYMENT_TOKEN_AMOUNT);
 
-        bool success = TOKEN.transfer(SELLER, TOKEN_AMOUNT);
-
-        if(!success) {
-
+        if (!success) {
             revert FailedTransferError();
-
         }
 
-
-
         // issue event
-
-        emit HLClib.ForcedCancellation(SELLER, BUYER);
-
+        emit HLClib.PaymentTokenWithdrawn(
+            msg.sender,
+            address(PAYMENT_TOKEN),
+            PAYMENT_TOKEN_AMOUNT
+        );
     }
 
+    // DEPOSIT
+    function depositAssetToken()
+        external
+        onlySeller
+        onlyInitialized
+        notAlreadyDepositedAssetToken
+        isNotExpired
+    {
+        // update status
+        assetLegStatus = HLClib.StatusAssetLeg.Deposited;
+
+        // execute transfer to the buyer
+        bool success = ASSET_TOKEN.transferFrom(
+            msg.sender,
+            address(this),
+            ASSET_TOKEN_AMOUNT
+        );
+
+        if (!success) {
+            revert FailedTransferError();
+        }
+
+        // issue event
+        emit HLClib.AssetTokenDeposited(
+            msg.sender,
+            address(ASSET_TOKEN),
+            ASSET_TOKEN_AMOUNT
+        );
+    }
+
+    function depositPaymentToken()
+        external
+        onlyBuyer
+        onlyInitialized
+        notAlreadyDepositedPaymentToken
+        isNotExpired
+    {
+        // update status
+        paymentLegStatus = HLClib.StatusPaymentLeg.Deposited;
+
+        // execute transfer to the seller
+        bool success = PAYMENT_TOKEN.transferFrom(
+            msg.sender,
+            address(this),
+            PAYMENT_TOKEN_AMOUNT
+        );
+
+        if (!success) {
+            revert FailedTransferError();
+        }
+
+        // issue event
+        emit HLClib.PaymentTokenDeposited(
+            msg.sender,
+            address(PAYMENT_TOKEN),
+            PAYMENT_TOKEN_AMOUNT
+        );
+    }
+
+    function executeDvP()
+        external
+        onlyInitialized
+        alreadyDepositedAssetToken
+        alreadyDepositedPaymentToken
+        isNotExpired
+        isMaster
+    {
+        // update status
+        hlcStatus = HLClib.StatusHLC.Executed;
+
+        // execute transfer to the buyer
+        bool success = ASSET_TOKEN.transfer(BUYER, ASSET_TOKEN_AMOUNT);
+
+        if (!success) {
+            revert FailedTransferError();
+        }
+
+        // execute payment to the seller
+        success = PAYMENT_TOKEN.transfer(SELLER, PAYMENT_TOKEN_AMOUNT);
+
+        if (!success) {
+            revert FailedTransferError();
+        }
+
+        // issue event
+        emit HLClib.Execution(SELLER, BUYER);
+    }
 }

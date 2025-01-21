@@ -1,0 +1,1 @@
+node .\scripts\HLC\resetScInfo.js

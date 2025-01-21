@@ -1,9 +1,11 @@
 // scripts/deploy_restrictions.js
 const { ethers } = require("hardhat");
+let scInfo = require("../../scInfo.json");
+const fs = require("fs");
 
 async function main() {
-    const commercialPaperAddress = "0x01dd8322ce39dbc99d5f5c504dded6b63cf3833b";
-    const adddressToMint = "0x0a3e02d3dd35e59318a779d60e68ce803918a757"; // isp lux
+    const commercialPaperAddress = scInfo.commercialPaperAddress;
+    const adddressToMint = "0x8193E1f855593aC6305D21b744ec708aaF26d202"; // isp lux
     const [registrar] = await ethers.getSigners();
 
     console.log("Registrar address:", registrar.address);

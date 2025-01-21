@@ -1,15 +1,22 @@
 // scripts/deploy_restrictions.js
 const { ethers } = require("hardhat");
+let scInfo = require("../../scInfo.json");
 
 async function main() {
-    const commercialPaperAddress = "0x01dd8322ce39dbc99d5f5c504dded6b63cf3833b";
+    const commercialPaperAddress = scInfo.commercialPaperAddress;
     const [registrar] = await ethers.getSigners();
     console.log("Registrar address:", registrar.address);
 
     const commercialPaperContract = await hre.ethers.getContractAt("CommercialPaper", commercialPaperAddress);
 
-    await commercialPaperContract.setLive();
-    console.log("Status set to live successfully");
+    if ((await commercialPaperContract.status()) == 1) {
+        console.log("Status is Live");
+
+        await commercialPaperContract.setMatured();
+        console.log("Status set to matured successfully");
+    } else {
+        console.log("Status is not Live, Commercial Paper cannot be matured");
+    }
 }
 
 main()

@@ -4,10 +4,13 @@ require("dotenv").config();
 const PRIVATE_KEY_1 = process.env.PRIVATE_KEY_1;
 const PRIVATE_KEY_2 = process.env.PRIVATE_KEY_2;
 const PRIVATE_KEY_3 = process.env.PRIVATE_KEY_3;
+const PRIVATE_KEY_4 = process.env.PRIVATE_KEY_4;
 
-const accounts = [PRIVATE_KEY_1, PRIVATE_KEY_2, PRIVATE_KEY_3];
+const accounts = [PRIVATE_KEY_1, PRIVATE_KEY_2, PRIVATE_KEY_3, PRIVATE_KEY_4];
 
 module.exports = {
+    defaultNetwork: "private_avalanche_isp_climatekick_l1_test",
+
     networks: {
         private_avalanche_isp_climatekick_l1_test: {
             url: process.env.RPC_URL_AVALANCHE_L1_TEST,

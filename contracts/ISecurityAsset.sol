@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/IAccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -42,8 +42,6 @@ interface ISecurityAsset is IAccessControl, IERC20, IERC20Metadata {
 
     // Events
 
-    
-
     /**
      * @dev Emitted when new tokens are minted.
      * @param to The address to which tokens are minted.
@@ -66,22 +64,22 @@ interface ISecurityAsset is IAccessControl, IERC20, IERC20Metadata {
      */
     event BurnAndMint(address from, address to, uint256 value);
 
-
     event Initialized(
         Type securityType,
         bool isLive_,
-        string  name_,
-        string  symbol_,
-        string  isin_,
-        string  issuanceCountry_,
-        string  currency_,
-        string  maturity_,
+        string name_,
+        string symbol_,
+        string isin_,
+        string issuanceCountry_,
+        string currency_,
+        string maturity_,
         uint64 minimumDenomination_,
-        string  addInfoUri_,
-        string  checksum_,
+        string addInfoUri_,
+        string checksum_,
         uint256 cap_,
         address restrictionsSmartContract_,
-        address issuer_);
+        address issuer_
+    );
 
     /**
      * @dev Emitted when a property of the Security Asset is changed.
@@ -97,15 +95,12 @@ interface ISecurityAsset is IAccessControl, IERC20, IERC20Metadata {
         uint256 newValue
     );
 
-     /**
+    /**
      * @dev Emitted when a an address is added or removed from/to escrow list
      * @param _address The address that was added or removed
      * @param change Property to show if the address was added or removed
      */
-  event EscrowListChanged(
-        address _address,
-        string change
-    );
+    event EscrowListChanged(address _address, string change);
     /**
      * @dev Emitted when a property of the Security Asset is changed (string version).
      * @param propertyName The name of the property that was changed.
@@ -161,7 +156,10 @@ interface ISecurityAsset is IAccessControl, IERC20, IERC20Metadata {
     /**
      * @dev Batch mint tokens for multiple accounts.
      */
-    function batchMint(address[] calldata accounts, uint256[] calldata amounts) external;
+    function batchMint(
+        address[] calldata accounts,
+        uint256[] calldata amounts
+    ) external;
 
     /**
      * @dev Add an issuer with the necessary roles.
@@ -175,7 +173,7 @@ interface ISecurityAsset is IAccessControl, IERC20, IERC20Metadata {
      */
     function addEscrow(address escrow_) external;
 
-        /**
+    /**
      * @dev Remove an escrow contract that can transfer tokens after maturity
      * @param escrow_ The address of the escrow to be removed.
      */

@@ -3,22 +3,24 @@ const { ethers } = require("hardhat");
 
 async function main() {
     const accounts = await ethers.getSigners();
-    const sender = accounts[0];
-    const receiver = accounts[1];
+    const sender = accounts[3];
+    const receivers = [accounts[0], accounts[1], accounts[2]];
 
     // transfer native token to receiver
-    const amount = ethers.parseEther("0.001"); // 1.0 ETH
+    const amount = ethers.parseEther("1"); // 1.0 ETH
 
-    // transfer the amount
-    const tx = await sender.sendTransaction({
-        to: receiver.address,
-        value: amount,
-    });
+    for (let i = 0; i < receivers.length; i++) {
+        // transfer the amount
+        const tx = await sender.sendTransaction({
+            to: receivers[i].address,
+            value: amount,
+        });
 
-    console.log(`Sent trx: ${tx.hash}`);
+        console.log(`Sent native token to ${receivers[i].address} trx: ${tx.hash}`);
 
-    // wait for the transaction to be mined
-    await tx.wait();
+        // wait for the transaction to be mined
+        await tx.wait();
+    }
 }
 
 main()

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -24,15 +24,13 @@ contract Restrictions is AccessControl, Pausable {
         require(hasRole(REGISTRAR, msg.sender), "caller is not a registrar");
         _;
     }
- // Events
-
-    
+    // Events
 
     /**
      * @dev Emitted when new tokens are minted.
      */
 
-        event WhitelistChanged(address [] _address, string change);
+    event WhitelistChanged(address[] _address, string change);
     /**
      * @dev Constructor to initialize the contract.
      * It sets up the roles for registrars and registrar administrators.
@@ -60,9 +58,12 @@ contract Restrictions is AccessControl, Pausable {
      * @param account_ The account to remove the registrar role.
      */
     function removeRegistrar(address account_) external onlyRegistrar {
-        require(hasRole(REGISTRAR, account_), "cannot remove role, account is not a registrar");
+        require(
+            hasRole(REGISTRAR, account_),
+            "cannot remove role, account is not a registrar"
+        );
         _revokeRole(REGISTRAR, account_);
-    } 
+    }
 
     /**
      * @dev Add multiple addresses to the whitelist.
@@ -72,8 +73,8 @@ contract Restrictions is AccessControl, Pausable {
         address[] calldata addAddresses_
     ) external onlyRegistrar {
         for (uint i = 0; i < addAddresses_.length; ++i) {
-            if(!whitelist[addAddresses_[i]]){
-            whitelist[addAddresses_[i]] = true;
+            if (!whitelist[addAddresses_[i]]) {
+                whitelist[addAddresses_[i]] = true;
             }
         }
         emit WhitelistChanged(addAddresses_, "Added");
@@ -88,21 +89,27 @@ contract Restrictions is AccessControl, Pausable {
         return whitelist[_address];
     }
 
-    function checkWhitelistStatus(address[] calldata addresses) external view returns (bool, address[] memory){
-        address[] memory nonWhitelisted = new address [](addresses.length);
+    function checkWhitelistStatus(
+        address[] calldata addresses
+    ) external view returns (bool, address[] memory) {
+        address[] memory nonWhitelisted = new address[](addresses.length);
         uint256 count = 0;
 
-        for (uint256 i=0; i < addresses.length; ++i){
+        for (uint256 i = 0; i < addresses.length; ++i) {
             if (!whitelist[addresses[i]]) {
                 nonWhitelisted[count] = addresses[i];
                 count++;
             }
         }
-        if (count==0){
+        if (count == 0) {
             return (true, new address[](0));
-        }else{address [] memory result = new address[](count); for (uint256 i =0; i<count; ++i){
-            result[i] = nonWhitelisted[i];
-        }return (false, result);}
+        } else {
+            address[] memory result = new address[](count);
+            for (uint256 i = 0; i < count; ++i) {
+                result[i] = nonWhitelisted[i];
+            }
+            return (false, result);
+        }
     }
 
     /**
@@ -113,12 +120,15 @@ contract Restrictions is AccessControl, Pausable {
         address[] calldata removeAddresses_
     ) external onlyRegistrar {
         for (uint i = 0; i < removeAddresses_.length; ++i) {
-            require(!hasRole(REGISTRAR, removeAddresses_[i]), "account is assigned to a role");
-            if (whitelist[removeAddresses_[i]]){
-            delete whitelist[removeAddresses_[i]];
+            require(
+                !hasRole(REGISTRAR, removeAddresses_[i]),
+                "account is assigned to a role"
+            );
+            if (whitelist[removeAddresses_[i]]) {
+                delete whitelist[removeAddresses_[i]];
             }
         }
-             emit WhitelistChanged(removeAddresses_, "Removed");
+        emit WhitelistChanged(removeAddresses_, "Removed");
     }
 
     /**
