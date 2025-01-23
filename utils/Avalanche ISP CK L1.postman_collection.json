@@ -10,7 +10,7 @@
 			"name": "EVM",
 			"item": [
 				{
-					"name": "DEBUG Copy 2",
+					"name": "DEBUG",
 					"item": [
 						{
 							"name": "debug_accountRange",
@@ -5016,6 +5016,110 @@
 				}
 			],
 			"description": "This document describes the API of the C-Chain, which is an instance of the Ethereum Virtual Machine (EVM.)\n\nNote: Ethereum has its own notion of `networkID` and `chainID`. The C-Chain uses `1` and `43110` for these values, obtained using the `net_version` and `eth_chainId` methods shown below. These have no relationship to AVA’s view of networkID and chainID, and are purely internal to the C-Chain. [More info](https://docs.avax.network/v1.0/en/api/evm)"
+		},
+		{
+			"name": "PROXY",
+			"item": [
+				{
+					"name": "AUTH",
+					"item": [
+						{
+							"name": "faucet",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"address\":\"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/faucet",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"faucet"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "ADMIN",
+					"item": [
+						{
+							"name": "register",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Mzc3MTE3MjYsInJvbGUiOlsiYWRtaW4iLCJibG9ja2NoYWluX3JlcXVlc3QiLCJmYXVjZXRfcmVxdWVzdCJdLCJ1c2VybmFtZSI6ImFkbWluIn0.MAxrhiKPXicSLXj7dviwgbRkgGTABC_LkRHsObRU1vE",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\":\"test2\",\r\n    \"password\":\"test2\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/admin/register",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"admin",
+										"register"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "RequestToken",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"-berserk22-\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/token",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }

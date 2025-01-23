@@ -16,3 +16,4 @@ slither . --json %reportFile%
 
 echo Report generated: %reportFile%
 pause
+
