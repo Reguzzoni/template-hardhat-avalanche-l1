@@ -37,9 +37,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}",
+									"raw": "{{baseURL}}/rpc",
 									"host": [
 										"{{baseURL}}"
+									],
+									"path": [
+										"rpc"
 									]
 								},
 								"description": "[Retesteth](https://github.com/ethereum/retesteth/wiki/Retesteth-Overview) uses\n`debug_accountRange` to implement debugging.\n\nReturns the accounts for a specified block.\n\n#### Parameters\n\n`blockHashOrNumber` : `data` - Block hash or number.\n\n`txIndex` : `integer` - Transaction index from which to start.\n\n`address` : `data` - Address hash from which to start.\n\n`limit` : `integer` - Maximum number of account entries to return.\n\n#### Returns\n\n`result`:`object` - Account details:\n\n* `addressMap`:`object` - List of address hashes and account addresses.\n* `nextKey`:`data` - Hash of the next address if any addresses remain in the state, otherwise\n  zero.\n"
@@ -101,9 +104,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}",
+									"raw": "{{baseURL}}/rpc",
 									"host": [
 										"{{baseURL}}"
+									],
+									"path": [
+										"rpc"
 									]
 								},
 								"description": "Returns metrics providing information on the internal operation of Besu.\n\nThe available metrics might change over time. The JVM metrics might vary based on the JVM\nimplementation used.\n\nThe metric types are:\n\n* Timer\n* Counter\n* Gauge.\n\n#### Parameters\n\nNone\n\n#### Returns\n\n`result`:`object`"
@@ -165,9 +171,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}",
+									"raw": "{{baseURL}}/rpc",
 									"host": [
 										"{{baseURL}}"
+									],
+									"path": [
+										"rpc"
 									]
 								},
 								"description": "[Remix](https://remix.ethereum.org/) uses `debug_storageRangeAt` to implement debugging. Use the\n_Debugger_ tab in Remix instead of calling `debug_storageRangeAt` directly.\n\nReturns the contract storage for the specified range.\n\n#### Parameters\n\n`blockHash` : `data` - Block hash.\n\n`txIndex` : `integer` - Transaction index from which to start.\n\n`address` : `data` - Contract address.\n\n`startKey` : `hash` - Start key.\n\n`limit` : `integer` - Number of storage entries to return.\n\n#### Returns\n\n`result`:`object` - [Range object](https://besu.hyperledger.org/en/stable/Reference/API-Objects#range-object).\n"
@@ -229,9 +238,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}",
+									"raw": "{{baseURL}}/rpc",
 									"host": [
 										"{{baseURL}}"
+									],
+									"path": [
+										"rpc"
 									]
 								},
 								"description": "Returns full trace of all invoked opcodes of all transactions included in the block.\n\n#### Parameters\n\n`Block` : `data` - RLP of the block.\n\n`Object` - request options (all optional and default to `false`):\n\n* `disableStorage` : `boolean` - `true` disables storage capture.\n* `disableMemory` : `boolean` - `true` disables memory capture.\n* `disableStack` : `boolean` - `true` disables stack capture.\n\n#### Returns\n\n`result`:`object` - [Trace object](https://besu.hyperledger.org/en/stable/Reference/API-Objects#trace-object).\n"
@@ -285,7 +297,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"debug_traceBlockByHash\",\n    \"params\": [\n        \"0xaceb3b2c9b25b0589230873921eb894b28722011b8df63977145517d754875a5\"\n    ],\n    \"id\": 1\n}",
+									"raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"debug_traceBlockByHash\",\n    \"params\": [\n        \"0x935de90399713bca5ed855a15b804a25405f885066f169fcc10c1efba947cbcc\"\n    ],\n    \"id\": 1\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -293,9 +305,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}",
+									"raw": "{{baseURL}}/rpc",
 									"host": [
 										"{{baseURL}}"
+									],
+									"path": [
+										"rpc"
 									]
 								},
 								"description": "Returns full trace of all invoked opcodes of all transactions included in the block.\n\n#### Parameters\n\n`block hash` : `data` - Block hash.\n\n`Object` - request options (all optional and default to `false`):\n\n* `disableStorage` : `boolean` - `true` disables storage capture.\n* `disableMemory` : `boolean` - `true` disables memory capture.\n* `disableStack` : `boolean` - `true` disables stack capture.\n\n#### Returns\n\n`result`:`array of objects` - [Trace objects](https://besu.hyperledger.org/en/stable/Reference/API-Objects#trace-object)."
@@ -357,9 +372,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}",
+									"raw": "{{baseURL}}/rpc",
 									"host": [
 										"{{baseURL}}"
+									],
+									"path": [
+										"rpc"
 									]
 								},
 								"description": "Returns full trace of all invoked opcodes of all transactions included in the block.\n\n#### Parameters\n\n`quantity|tag` - Integer representing a block number or one of the string tags `latest`,\n`earliest`, or `pending`, as described in\n[Block Parameter](https://besu.hyperledger.org/en/stable/HowTo/Interact/APIs/Using-JSON-RPC-API#block-parameter).\n\n`Object` - request options (all optional and default to `false`):\n\n* `disableStorage` : `boolean` - `true` disables storage capture.\n* `disableMemory` : `boolean` - `true` disables memory capture.\n* `disableStack` : `boolean` - `true` disables stack capture.\n\n#### Returns\n\n`result`:`array of objects` - [Trace objects](https://besu.hyperledger.org/en/stable/Reference/API-Objects#trace-object)."
@@ -413,7 +431,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"debug_traceTransaction\",\n    \"params\": [\n        \"0x2cc6c94c21685b7e0f8ddabf277a5ccf98db157c62619cde8baea696a74ed18e\",\n        {\n            \"disableStorage\": true\n        }\n    ],\n    \"id\": 1\n}",
+									"raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"debug_traceTransaction\",\n    \"params\": [\n        \"0x3f62661ed0b1e589357351db3a13a6f3cee77ad73b32bba5fb5dc6b72d5be303\",\n        {\n            \"disableStorage\": true\n        }\n    ],\n    \"id\": 1\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -421,9 +439,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}",
+									"raw": "{{baseURL}}/rpc",
 									"host": [
 										"{{baseURL}}"
+									],
+									"path": [
+										"rpc"
 									]
 								},
 								"description": "[Remix](https://remix.ethereum.org/) uses `debug_traceTransaction` to implement debugging. Use the\n_Debugger_ tab in Remix instead of calling `debug_traceTransaction` directly.\n\nReruns the transaction with the same state as when the transaction executed.\n\n#### Parameters\n\n`transactionHash` : `data` - Transaction hash.\n\n`Object` - request options (all optional and default to `false`):\n\n* `disableStorage` : `boolean` - `true` disables storage capture.\n* `disableMemory` : `boolean` - `true` disables memory capture.\n* `disableStack` : `boolean` - `true` disables stack capture.\n\n#### Returns\n\n`result`:`object` - [Trace object](https://besu.hyperledger.org/en/stable/Reference/API-Objects#trace-object).\n"
@@ -654,14 +675,18 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{bearerToken}}",
-								"type": "text"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"eth_baseFee\",\n    \"params\": [],\n    \"id\": 1\n}",
@@ -672,9 +697,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Get the base fee for the next block. [More info](https://docs.avax.network/apis/avalanchego/apis/c-chain#eth_basefee)"
@@ -889,9 +917,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting the most recent block number."
@@ -923,9 +954,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Call a contract."
@@ -1135,9 +1169,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Not well documented in JSON-RPC references. See instead EIP694."
@@ -1288,9 +1325,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting an account’s non-AVAX balance. [More info](https://docs.avax.network/apis/avalanchego/apis/c-chain#eth_getassetbalance)"
@@ -1441,9 +1481,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting an account’s balance."
@@ -1475,9 +1518,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "`eth_getChainConfig` returns chain config. This API is enabled by default with `internal-eth` namespace. [More info](https://docs.avax.network/apis/avalanchego/apis/c-chain#eth_getchainconfig)"
@@ -1509,9 +1555,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Get the priority fee needed to be included in a block. [More info](https://docs.avax.network/apis/avalanchego/apis/c-chain#eth_maxpriorityfeepergas)"
@@ -1543,9 +1592,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Signing a transaction.\n\nThis method will create a signed transaction, but will not publish it automatically to the network. Instead, the `raw` result output should be used with `eth_sendRawTransaction` to execute the transaction."
@@ -1577,9 +1629,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting an account’s nonce."
@@ -1611,9 +1666,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Send a raw transaction.\n\nExample below shows a raw transaction published to the network and its associated transaction hash."
@@ -2671,9 +2729,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting a block by hash."
@@ -3731,9 +3792,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting a block by number."
@@ -4303,9 +4367,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting a transaction by hash."
@@ -4903,9 +4970,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting a transaction receipt."
@@ -4937,9 +5007,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Send a signed transaction to the network. [More info](https://docs.avax.network/apis/avalanchego/apis/c-chain#avaxissuetx)"
@@ -4971,9 +5044,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Getting the current client version."
@@ -5005,9 +5081,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}",
+							"raw": "{{baseURL}}/rpc",
 							"host": [
 								"{{baseURL}}"
+							],
+							"path": [
+								"rpc"
 							]
 						},
 						"description": "Calculate a cryptographic hash.\n\nThe input parameter contains hexidecimal bytes of arbitrary length. The example here uses the UTF-8 text string “snowstorm” converted to hexidecimal bytes."
@@ -5026,11 +5105,21 @@
 						{
 							"name": "faucet",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"address\":\"\"\r\n}",
+									"raw": "{\r\n    \"address\":\"0x627306090abaB3A6e1400e9345bC60c78a8BEf57\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5038,11 +5127,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}/faucet",
+									"raw": "{{baseURL}}/utils/faucet",
 									"host": [
 										"{{baseURL}}"
 									],
 									"path": [
+										"utils",
 										"faucet"
 									]
 								}
@@ -5062,7 +5152,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Mzc3MTE3MjYsInJvbGUiOlsiYWRtaW4iLCJibG9ja2NoYWluX3JlcXVlc3QiLCJmYXVjZXRfcmVxdWVzdCJdLCJ1c2VybmFtZSI6ImFkbWluIn0.MAxrhiKPXicSLXj7dviwgbRkgGTABC_LkRHsObRU1vE",
+											"value": "{{bearerToken}}",
 											"type": "string"
 										}
 									]
@@ -5071,7 +5161,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"username\":\"test2\",\r\n    \"password\":\"test2\"\r\n}",
+									"raw": "{\r\n    \"username\":\"test4\",\r\n    \"password\":\"test4\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5100,7 +5190,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"-berserk22-\"\r\n}",
+							"raw": "{\r\n    \"username\":\"test\",\r\n    \"password\":\"test\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
