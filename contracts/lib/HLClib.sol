@@ -9,14 +9,14 @@ library HLClib {
         Cancelled
     }
 
-    enum StatusAssetLeg {
+    enum StatusLeg {
         Empty,
         Deposited
     }
 
-    enum StatusPaymentLeg {
+    enum StatusSign {
         Empty,
-        Deposited
+        Signed
     }
 
     //-------------------------------------//
@@ -58,6 +58,8 @@ library HLClib {
     );
 
     event Execution(address indexed _from, address indexed _to);
+
+    event Sign(address indexed _signerAddress);
 
     event CooperativeExecution(address indexed _from, address indexed _to);
     event ForcedExecution(address indexed _from, address indexed _to);

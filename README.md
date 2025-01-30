@@ -24,10 +24,10 @@ The private_avalanche_isp_climatekick_l1_test network is set by default in the h
 
 ## Execute Flow HLC full ledger
 
-It is also possible to execute a flow that creates a full ledger DvP transaction using a custom ERC20 token and a commercial paper.
+It is also possible to execute a flow that creates a full ledger DvP transaction using a custom ERC20 token and a security asset.
 
 ```shell
-./utils/executeHLCFullLedger.bat
+./utils/executeHLCFullLedger_ECHLC.bat
 ```
 
 This flow is based on the scInfo.json file, which contains the information about the deployed smart contract.
@@ -52,7 +52,7 @@ Request native token ICKT in order to pay gas fee
 call npx hardhat run ./scripts/NativeTokenICKT/0_transfer_token.js
 ```
 
-Deploy the ERC20 custom used to "pay" the commercial paper
+Deploy the ERC20 custom used to "pay" the security asset
 
 ```shell
 call npx hardhat run ./scripts/CustomERC20/0_deploy.js
@@ -64,40 +64,40 @@ Transfer the custom ERC20 token to the buyer and seller
 call npx hardhat run ./scripts/CustomERC20/1_transfer_token.js
 ```
 
-Deploy the restrictions contract dedicated to whitelist the commercial paper holders
+Deploy the restrictions contract dedicated to whitelist the security asset holders
 
 ```shell
 call npx hardhat run ./scripts/HLC/0_deploy_restrictions.js
 ```
 
-Deploy the commercial paper representing the asset
+Deploy the security asset representing the asset
 
 ```shell
-call npx hardhat run ./scripts/HLC/1_deploy_commercial_paper.js
+call npx hardhat run ./scripts/HLC/1_deploy_custom_security_asset.js
 ```
 
 Deploy the HLC contract, an escrow account where tokens are locked until the DvP is executed
 
 ```shell
-call npx hardhat run ./scripts/HLC/2_deploy_hlc.js
+call npx hardhat run ./scripts/HLC/ECHLC/2_deploy_hlc.js
 ```
 
-Transfer the commercial paper to the HLC contract
+Transfer the security asset to the HLC contract
 
 ```shell
-call npx hardhat run ./scripts/HLC/3_seller_transfer_token_to_hlc.js
+call npx hardhat run ./scripts/HLC/ECHLC/3_seller_transfer_token_to_hlc.js
 ```
 
 Transfer the custom ERC20 token to the HLC contract
 
 ```shell
-call npx hardhat run ./scripts/HLC/4_buyer_transfer_token_to_hlc.js
+call npx hardhat run ./scripts/HLC/ECHLC/4_buyer_transfer_token_to_hlc.js
 ```
 
 Execute the DvP transaction
 
 ```shell
-call npx hardhat run ./scripts/HLC/5_execute_dvp.js
+call npx hardhat run ./scripts/HLC/ECHLC/5_execute_dvp.js
 ```
 
 ## Slither report
@@ -113,7 +113,7 @@ It will create a report on the slither folder slitherReport.
 ## ENV file
 
 ```shell
-PRIVATE_KEY_1 deployer and registrar
+PRIVATE_KEY_1 deployer and admin
 ```
 
 ```shell

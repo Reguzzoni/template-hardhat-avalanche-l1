@@ -4,13 +4,16 @@ let scInfo = require("../../scInfo.json");
 const fs = require("fs");
 
 async function main() {
-    const commercialPaperAddress = scInfo.commercialPaperAddress;
-    const [registrar] = await ethers.getSigners();
-    console.log("Registrar address:", registrar.address);
+    const customSecurityAssetAddress = scInfo.customSecurityAssetAddress;
+    const [admin] = await ethers.getSigners();
+    console.log("Registrar address:", admin.address);
 
-    const commercialPaperContract = await hre.ethers.getContractAt("CommercialPaper", commercialPaperAddress);
+    const customSecurityAssetContract = await hre.ethers.getContractAt(
+        "CustomSecurityAsset",
+        customSecurityAssetAddress
+    );
 
-    await commercialPaperContract.setLive();
+    await customSecurityAssetContract.setLive();
     console.log("Status set to live successfully");
 }
 

@@ -3,19 +3,22 @@ const { ethers } = require("hardhat");
 let scInfo = require("../../scInfo.json");
 
 async function main() {
-    const commercialPaperAddress = scInfo.commercialPaperAddress;
-    const [registrar] = await ethers.getSigners();
-    console.log("Registrar address:", registrar.address);
+    const customSecurityAssetAddress = scInfo.customSecurityAssetAddress;
+    const [admin] = await ethers.getSigners();
+    console.log("Registrar address:", admin.address);
 
-    const commercialPaperContract = await hre.ethers.getContractAt("CommercialPaper", commercialPaperAddress);
+    const customSecurityAssetContract = await hre.ethers.getContractAt(
+        "CustomSecurityAsset",
+        customSecurityAssetAddress
+    );
 
-    if ((await commercialPaperContract.status()) == 1) {
+    if ((await customSecurityAssetContract.status()) == 1) {
         console.log("Status is Live");
 
-        await commercialPaperContract.setMatured();
+        await customSecurityAssetContract.setMatured();
         console.log("Status set to matured successfully");
     } else {
-        console.log("Status is not Live, Commercial Paper cannot be matured");
+        console.log("Status is not Live, Security asset cannot be matured");
     }
 }
 

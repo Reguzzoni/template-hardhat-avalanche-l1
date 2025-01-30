@@ -4,20 +4,23 @@ let scInfo = require("../../scInfo.json");
 const fs = require("fs");
 
 async function main() {
-    const commercialPaperAddress = scInfo.commercialPaperAddress;
+    const customSecurityAssetAddress = scInfo.customSecurityAssetAddress;
     const adddressToMint = "0x8193E1f855593aC6305D21b744ec708aaF26d202"; // isp lux
-    const [registrar] = await ethers.getSigners();
+    const [admin] = await ethers.getSigners();
 
-    console.log("Registrar address:", registrar.address);
-    console.log("Commercial Paper address:", commercialPaperAddress);
+    console.log("Registrar address:", admin.address);
+    console.log("Security asset address:", customSecurityAssetAddress);
     console.log("Minting to address: " + adddressToMint);
 
-    // Get the Commercial Paper Contract
-    const commercialPaperContract = await hre.ethers.getContractAt("CommercialPaper", commercialPaperAddress);
+    // Get the Security asset Contract
+    const customSecurityAssetContract = await hre.ethers.getContractAt(
+        "CustomSecurityAsset",
+        customSecurityAssetAddress
+    );
 
-    const amountToMint = await commercialPaperContract.cap();
+    const amountToMint = await customSecurityAssetContract.cap();
 
-    await commercialPaperContract.mint(adddressToMint, amountToMint);
+    await customSecurityAssetContract.mint(adddressToMint, amountToMint);
     console.log("Mint to " + adddressToMint + " successfully");
 }
 

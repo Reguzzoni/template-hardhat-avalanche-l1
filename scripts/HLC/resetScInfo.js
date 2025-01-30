@@ -8,7 +8,7 @@ async function main() {
     scInfo = {
         customERC20Address: "",
         hlcAddress: "",
-        commercialPaperAddress: "",
+        customSecurityAssetAddress: "",
         restrictionsAddress: "",
         whitelistedAddresses: [],
     };

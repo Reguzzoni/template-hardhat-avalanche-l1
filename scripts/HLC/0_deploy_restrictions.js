@@ -5,20 +5,20 @@ const fs = require("fs");
 
 async function main() {
     const accounts = await ethers.getSigners();
-    const registrar = accounts[0];
+    const admin = accounts[0];
     const issuer = accounts[1];
     const holder = accounts[2];
 
-    console.log("Deploying Restrictions with the account:", registrar.address);
+    console.log("Deploying Restrictions with the account:", admin.address);
 
     // Deploy Restrictions
-    const restrictionsContract = await hre.ethers.deployContract("Restrictions", { from: registrar });
+    const restrictionsContract = await hre.ethers.deployContract("Restrictions", { from: admin });
     await restrictionsContract.waitForDeployment();
     console.log("Restrictions deployed with address:", restrictionsContract.target);
 
     scInfo.restrictionsAddress = restrictionsContract.target;
 
-    await restrictionsContract.addWhitelistAddress([issuer.address, holder.address], { from: registrar });
+    await restrictionsContract.addWhitelistAddress([issuer.address, holder.address], { from: admin });
     console.log("Addresses whitelisted successfully");
 
     scInfo.whitelistedAddresses = [issuer.address, holder.address];
