@@ -1,41 +1,53 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 library LoanAssetLib {
-    enum LoanType {
+    // ##################################### //
+    // ############### ENUM ################ //
+    // ##################################### //
+    enum LoanTypeEnum {
         BULLET,
         AMORTIZED
     }
 
-    enum LoanStatus {
+    enum InterestRateTypeEnum {
+        FIXED,
+        FLOATING
+    }
+
+    enum LoanStatusEnum {
         PRELIMINARY,
         LIVE,
         MATURED,
         CLOSED
     }
 
-    enum InterestRateType {
-        FIXED,
-        FLOATING
-    }
-
-    enum CouponStatus {
+    enum RepaymentStatusEnum {
         UNPAID,
         PAID
     }
 
-    enum BorrowerStatus {
+    enum BorrowerStatusEnum {
         ACTIVE,
         REPAID,
         DEFAULTED,
         ANTICIPATED
     }
 
+    enum LenderStatusEnum {
+        ACTIVE,
+        INACTIVE
+    }
+
+    // ##################################### //
+    // ############### STRUCT ############## //
+    // ##################################### //
+
     struct LoanAnag {
         bytes32 name;
         bytes32 issuanceCountry;
         bytes32 currency;
-        LoanType loanType;
-        InterestRateType interestRateType;
+        LoanTypeEnum loanType;
+        InterestRateTypeEnum interestRateType;
         uint256 startDate;
         uint256 maturityDate;
     }
@@ -43,35 +55,21 @@ library LoanAssetLib {
     struct LoanInfo {
         uint256 totalAmount;
         uint256 interestRate;
-        uint256[] couponPaymentDates;
+        uint256[] repaymentsDates;
+        address[] lenders;
+        uint256[] lendersShares;
         address[] borrowers;
-        uint256[] borrowerShares;
+        uint256[] borrowersShares;
     }
 
-    struct CouponInfo {
+    struct RepaymentInfo {
         uint256 amount;
-        uint256 paymentDate;
-        CouponStatus couponStatus;
+        uint256 repaymentDate;
+        RepaymentStatusEnum repaymentStatus;
     }
 
     struct OutstandingInfo {
         uint256 outstandingPrincipalAmount;
-        uint256 couponNumberLeftToPay;
+        uint256 repaymentNumberLeftToPay;
     }
-
-    event LoanIssued(bytes32 name, address indexed lender, uint256 totalAmount);
-
-    event UpdateInterestRateAndCoupon(uint256 interestRate);
-
-    event LoanStarted();
-
-    event CouponPaid(
-        address indexed borrower,
-        uint256 couponAmount,
-        uint256 couponNumber
-    );
-
-    event LoanMatured();
-
-    event LoanRepaid(address indexed borrower, uint256 repaymentAmount);
 }

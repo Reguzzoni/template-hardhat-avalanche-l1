@@ -1,0 +1,1329 @@
+{
+    "contractName": "LoanAssetLib",
+    "abi": [
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "bytes32",
+                    "name": "name",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "lender",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "totalAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "LoanIssued",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [],
+            "name": "LoanMatured",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "borrower",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "repaymentAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "LoanRepaid",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [],
+            "name": "LoanStarted",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "borrower",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "repaymentAmount",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "repaymentNumber",
+                    "type": "uint256"
+                }
+            ],
+            "name": "RepaymentPaid",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "interestRate",
+                    "type": "uint256"
+                }
+            ],
+            "name": "UpdateInterestRateAndRate",
+            "type": "event"
+        }
+    ],
+    "metadata": "{\"compiler\":{\"version\":\"0.8.20+commit.a1b79de6\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"name\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"lender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"totalAmount\",\"type\":\"uint256\"}],\"name\":\"LoanIssued\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"LoanMatured\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"borrower\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"repaymentAmount\",\"type\":\"uint256\"}],\"name\":\"LoanRepaid\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"LoanStarted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"borrower\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"repaymentAmount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"repaymentNumber\",\"type\":\"uint256\"}],\"name\":\"RepaymentPaid\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"interestRate\",\"type\":\"uint256\"}],\"name\":\"UpdateInterestRateAndRate\",\"type\":\"event\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"d:/IntesaSanpaolo/Projects/Avalanche/avalanche-sc-hardhat/contracts/security/Draft/LoanAssetLib.sol\":\"LoanAssetLib\"},\"evmVersion\":\"shanghai\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"d:/IntesaSanpaolo/Projects/Avalanche/avalanche-sc-hardhat/contracts/security/Draft/LoanAssetLib.sol\":{\"keccak256\":\"0xef5c72d733e49a978e6c1e5d1b03a62868da690ad931db776589171ca921e4d5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f5df49675a30f19e12f3a25e7b810d1ce17e77a2a3983a23d2a713303694bbe3\",\"dweb:/ipfs/QmZXcziVt11kDtpxzUnoA8ph2vn5xwm21Zw49TCKYLo83f\"]}},\"version\":1}",
+    "bytecode": "6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122026c73b63ba4f9937e25af77c73dde47d052d67ddbc2341b9b50698e947da163164736f6c63430008140033",
+    "deployedBytecode": "5f80fdfea264697066735822122026c73b63ba4f9937e25af77c73dde47d052d67ddbc2341b9b50698e947da163164736f6c63430008140033",
+    "sourceMap": "59:2192:0:-:0;;;;;;;;;;;;;;;;;;;;;",
+    "deployedSourceMap": "59:2192:0:-:0;;",
+    "sourcePath": "d:/IntesaSanpaolo/Projects/Avalanche/avalanche-sc-hardhat/contracts/security/Draft/LoanAssetLib.sol",
+    "compiler": {
+        "name": "solc",
+        "version": "0.8.20+commit.a1b79de6"
+    },
+    "ast": {
+        "absolutePath": "d:/IntesaSanpaolo/Projects/Avalanche/avalanche-sc-hardhat/contracts/security/Draft/LoanAssetLib.sol",
+        "exportedSymbols": {
+            "LoanAssetLib": [
+                104
+            ]
+        },
+        "id": 105,
+        "license": "MIT",
+        "nodeType": "SourceUnit",
+        "nodes": [
+            {
+                "id": 1,
+                "literals": [
+                    "solidity",
+                    "^",
+                    "0.8",
+                    ".20"
+                ],
+                "nodeType": "PragmaDirective",
+                "src": "33:24:0"
+            },
+            {
+                "abstract": false,
+                "baseContracts": [],
+                "canonicalName": "LoanAssetLib",
+                "contractDependencies": [],
+                "contractKind": "library",
+                "fullyImplemented": true,
+                "id": 104,
+                "linearizedBaseContracts": [
+                    104
+                ],
+                "name": "LoanAssetLib",
+                "nameLocation": "67:12:0",
+                "nodeType": "ContractDefinition",
+                "nodes": [
+                    {
+                        "canonicalName": "LoanAssetLib.LoanTypeEnum",
+                        "id": 4,
+                        "members": [
+                            {
+                                "id": 2,
+                                "name": "BULLET",
+                                "nameLocation": "263:6:0",
+                                "nodeType": "EnumValue",
+                                "src": "263:6:0"
+                            },
+                            {
+                                "id": 3,
+                                "name": "AMORTIZED",
+                                "nameLocation": "280:9:0",
+                                "nodeType": "EnumValue",
+                                "src": "280:9:0"
+                            }
+                        ],
+                        "name": "LoanTypeEnum",
+                        "nameLocation": "239:12:0",
+                        "nodeType": "EnumDefinition",
+                        "src": "234:62:0"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.InterestRateTypeEnum",
+                        "id": 7,
+                        "members": [
+                            {
+                                "id": 5,
+                                "name": "FIXED",
+                                "nameLocation": "341:5:0",
+                                "nodeType": "EnumValue",
+                                "src": "341:5:0"
+                            },
+                            {
+                                "id": 6,
+                                "name": "FLOATING",
+                                "nameLocation": "357:8:0",
+                                "nodeType": "EnumValue",
+                                "src": "357:8:0"
+                            }
+                        ],
+                        "name": "InterestRateTypeEnum",
+                        "nameLocation": "309:20:0",
+                        "nodeType": "EnumDefinition",
+                        "src": "304:68:0"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.LoanStatusEnum",
+                        "id": 12,
+                        "members": [
+                            {
+                                "id": 8,
+                                "name": "PRELIMINARY",
+                                "nameLocation": "411:11:0",
+                                "nodeType": "EnumValue",
+                                "src": "411:11:0"
+                            },
+                            {
+                                "id": 9,
+                                "name": "LIVE",
+                                "nameLocation": "433:4:0",
+                                "nodeType": "EnumValue",
+                                "src": "433:4:0"
+                            },
+                            {
+                                "id": 10,
+                                "name": "MATURED",
+                                "nameLocation": "448:7:0",
+                                "nodeType": "EnumValue",
+                                "src": "448:7:0"
+                            },
+                            {
+                                "id": 11,
+                                "name": "CLOSED",
+                                "nameLocation": "466:6:0",
+                                "nodeType": "EnumValue",
+                                "src": "466:6:0"
+                            }
+                        ],
+                        "name": "LoanStatusEnum",
+                        "nameLocation": "385:14:0",
+                        "nodeType": "EnumDefinition",
+                        "src": "380:99:0"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.RepaymentStatusEnum",
+                        "id": 15,
+                        "members": [
+                            {
+                                "id": 13,
+                                "name": "UNPAID",
+                                "nameLocation": "523:6:0",
+                                "nodeType": "EnumValue",
+                                "src": "523:6:0"
+                            },
+                            {
+                                "id": 14,
+                                "name": "PAID",
+                                "nameLocation": "540:4:0",
+                                "nodeType": "EnumValue",
+                                "src": "540:4:0"
+                            }
+                        ],
+                        "name": "RepaymentStatusEnum",
+                        "nameLocation": "492:19:0",
+                        "nodeType": "EnumDefinition",
+                        "src": "487:64:0"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.BorrowerStatusEnum",
+                        "id": 20,
+                        "members": [
+                            {
+                                "id": 16,
+                                "name": "ACTIVE",
+                                "nameLocation": "594:6:0",
+                                "nodeType": "EnumValue",
+                                "src": "594:6:0"
+                            },
+                            {
+                                "id": 17,
+                                "name": "REPAID",
+                                "nameLocation": "611:6:0",
+                                "nodeType": "EnumValue",
+                                "src": "611:6:0"
+                            },
+                            {
+                                "id": 18,
+                                "name": "DEFAULTED",
+                                "nameLocation": "628:9:0",
+                                "nodeType": "EnumValue",
+                                "src": "628:9:0"
+                            },
+                            {
+                                "id": 19,
+                                "name": "ANTICIPATED",
+                                "nameLocation": "648:11:0",
+                                "nodeType": "EnumValue",
+                                "src": "648:11:0"
+                            }
+                        ],
+                        "name": "BorrowerStatusEnum",
+                        "nameLocation": "564:18:0",
+                        "nodeType": "EnumDefinition",
+                        "src": "559:107:0"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.LenderStatusEnum",
+                        "id": 23,
+                        "members": [
+                            {
+                                "id": 21,
+                                "name": "ACTIVE",
+                                "nameLocation": "707:6:0",
+                                "nodeType": "EnumValue",
+                                "src": "707:6:0"
+                            },
+                            {
+                                "id": 22,
+                                "name": "INACTIVE",
+                                "nameLocation": "724:8:0",
+                                "nodeType": "EnumValue",
+                                "src": "724:8:0"
+                            }
+                        ],
+                        "name": "LenderStatusEnum",
+                        "nameLocation": "679:16:0",
+                        "nodeType": "EnumDefinition",
+                        "src": "674:65:0"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.LoanAnagStruct",
+                        "id": 40,
+                        "members": [
+                            {
+                                "constant": false,
+                                "id": 25,
+                                "mutability": "mutable",
+                                "name": "name",
+                                "nameLocation": "937:4:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 40,
+                                "src": "929:12:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes32",
+                                    "typeString": "bytes32"
+                                },
+                                "typeName": {
+                                    "id": 24,
+                                    "name": "bytes32",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "929:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 27,
+                                "mutability": "mutable",
+                                "name": "issuanceCountry",
+                                "nameLocation": "960:15:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 40,
+                                "src": "952:23:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes32",
+                                    "typeString": "bytes32"
+                                },
+                                "typeName": {
+                                    "id": 26,
+                                    "name": "bytes32",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "952:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 29,
+                                "mutability": "mutable",
+                                "name": "currency",
+                                "nameLocation": "994:8:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 40,
+                                "src": "986:16:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes32",
+                                    "typeString": "bytes32"
+                                },
+                                "typeName": {
+                                    "id": 28,
+                                    "name": "bytes32",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "986:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 32,
+                                "mutability": "mutable",
+                                "name": "loanType",
+                                "nameLocation": "1026:8:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 40,
+                                "src": "1013:21:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_enum$_LoanTypeEnum_$4",
+                                    "typeString": "enum LoanAssetLib.LoanTypeEnum"
+                                },
+                                "typeName": {
+                                    "id": 31,
+                                    "nodeType": "UserDefinedTypeName",
+                                    "pathNode": {
+                                        "id": 30,
+                                        "name": "LoanTypeEnum",
+                                        "nameLocations": [
+                                            "1013:12:0"
+                                        ],
+                                        "nodeType": "IdentifierPath",
+                                        "referencedDeclaration": 4,
+                                        "src": "1013:12:0"
+                                    },
+                                    "referencedDeclaration": 4,
+                                    "src": "1013:12:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_enum$_LoanTypeEnum_$4",
+                                        "typeString": "enum LoanAssetLib.LoanTypeEnum"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 35,
+                                "mutability": "mutable",
+                                "name": "interestRateType",
+                                "nameLocation": "1066:16:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 40,
+                                "src": "1045:37:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_enum$_InterestRateTypeEnum_$7",
+                                    "typeString": "enum LoanAssetLib.InterestRateTypeEnum"
+                                },
+                                "typeName": {
+                                    "id": 34,
+                                    "nodeType": "UserDefinedTypeName",
+                                    "pathNode": {
+                                        "id": 33,
+                                        "name": "InterestRateTypeEnum",
+                                        "nameLocations": [
+                                            "1045:20:0"
+                                        ],
+                                        "nodeType": "IdentifierPath",
+                                        "referencedDeclaration": 7,
+                                        "src": "1045:20:0"
+                                    },
+                                    "referencedDeclaration": 7,
+                                    "src": "1045:20:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_enum$_InterestRateTypeEnum_$7",
+                                        "typeString": "enum LoanAssetLib.InterestRateTypeEnum"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 37,
+                                "mutability": "mutable",
+                                "name": "startDate",
+                                "nameLocation": "1101:9:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 40,
+                                "src": "1093:17:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 36,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1093:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 39,
+                                "mutability": "mutable",
+                                "name": "maturityDate",
+                                "nameLocation": "1129:12:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 40,
+                                "src": "1121:20:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 38,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1121:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            }
+                        ],
+                        "name": "LoanAnagStruct",
+                        "nameLocation": "903:14:0",
+                        "nodeType": "StructDefinition",
+                        "scope": 104,
+                        "src": "896:253:0",
+                        "visibility": "public"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.LoanInfoStruct",
+                        "id": 60,
+                        "members": [
+                            {
+                                "constant": false,
+                                "id": 42,
+                                "mutability": "mutable",
+                                "name": "totalAmount",
+                                "nameLocation": "1198:11:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 60,
+                                "src": "1190:19:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 41,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1190:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 44,
+                                "mutability": "mutable",
+                                "name": "interestRate",
+                                "nameLocation": "1228:12:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 60,
+                                "src": "1220:20:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 43,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1220:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 47,
+                                "mutability": "mutable",
+                                "name": "repaymentDates",
+                                "nameLocation": "1261:14:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 60,
+                                "src": "1251:24:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                    "typeString": "uint256[]"
+                                },
+                                "typeName": {
+                                    "baseType": {
+                                        "id": 45,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1251:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "id": 46,
+                                    "nodeType": "ArrayTypeName",
+                                    "src": "1251:9:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                        "typeString": "uint256[]"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 50,
+                                "mutability": "mutable",
+                                "name": "lenders",
+                                "nameLocation": "1296:7:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 60,
+                                "src": "1286:17:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                                    "typeString": "address[]"
+                                },
+                                "typeName": {
+                                    "baseType": {
+                                        "id": 48,
+                                        "name": "address",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1286:7:0",
+                                        "stateMutability": "nonpayable",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_address",
+                                            "typeString": "address"
+                                        }
+                                    },
+                                    "id": 49,
+                                    "nodeType": "ArrayTypeName",
+                                    "src": "1286:9:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                                        "typeString": "address[]"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 53,
+                                "mutability": "mutable",
+                                "name": "lenderShares",
+                                "nameLocation": "1324:12:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 60,
+                                "src": "1314:22:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                    "typeString": "uint256[]"
+                                },
+                                "typeName": {
+                                    "baseType": {
+                                        "id": 51,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1314:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "id": 52,
+                                    "nodeType": "ArrayTypeName",
+                                    "src": "1314:9:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                        "typeString": "uint256[]"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 56,
+                                "mutability": "mutable",
+                                "name": "borrowers",
+                                "nameLocation": "1357:9:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 60,
+                                "src": "1347:19:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                                    "typeString": "address[]"
+                                },
+                                "typeName": {
+                                    "baseType": {
+                                        "id": 54,
+                                        "name": "address",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1347:7:0",
+                                        "stateMutability": "nonpayable",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_address",
+                                            "typeString": "address"
+                                        }
+                                    },
+                                    "id": 55,
+                                    "nodeType": "ArrayTypeName",
+                                    "src": "1347:9:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                                        "typeString": "address[]"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 59,
+                                "mutability": "mutable",
+                                "name": "borrowerShares",
+                                "nameLocation": "1387:14:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 60,
+                                "src": "1377:24:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                    "typeString": "uint256[]"
+                                },
+                                "typeName": {
+                                    "baseType": {
+                                        "id": 57,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1377:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "id": 58,
+                                    "nodeType": "ArrayTypeName",
+                                    "src": "1377:9:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                        "typeString": "uint256[]"
+                                    }
+                                },
+                                "visibility": "internal"
+                            }
+                        ],
+                        "name": "LoanInfoStruct",
+                        "nameLocation": "1164:14:0",
+                        "nodeType": "StructDefinition",
+                        "scope": 104,
+                        "src": "1157:252:0",
+                        "visibility": "public"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.RepaymentInfoStruct",
+                        "id": 68,
+                        "members": [
+                            {
+                                "constant": false,
+                                "id": 62,
+                                "mutability": "mutable",
+                                "name": "amount",
+                                "nameLocation": "1463:6:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 68,
+                                "src": "1455:14:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 61,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1455:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 64,
+                                "mutability": "mutable",
+                                "name": "paymentDate",
+                                "nameLocation": "1488:11:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 68,
+                                "src": "1480:19:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 63,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1480:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 67,
+                                "mutability": "mutable",
+                                "name": "repaymentStatus",
+                                "nameLocation": "1530:15:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 68,
+                                "src": "1510:35:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_enum$_RepaymentStatusEnum_$15",
+                                    "typeString": "enum LoanAssetLib.RepaymentStatusEnum"
+                                },
+                                "typeName": {
+                                    "id": 66,
+                                    "nodeType": "UserDefinedTypeName",
+                                    "pathNode": {
+                                        "id": 65,
+                                        "name": "RepaymentStatusEnum",
+                                        "nameLocations": [
+                                            "1510:19:0"
+                                        ],
+                                        "nodeType": "IdentifierPath",
+                                        "referencedDeclaration": 15,
+                                        "src": "1510:19:0"
+                                    },
+                                    "referencedDeclaration": 15,
+                                    "src": "1510:19:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_enum$_RepaymentStatusEnum_$15",
+                                        "typeString": "enum LoanAssetLib.RepaymentStatusEnum"
+                                    }
+                                },
+                                "visibility": "internal"
+                            }
+                        ],
+                        "name": "RepaymentInfoStruct",
+                        "nameLocation": "1424:19:0",
+                        "nodeType": "StructDefinition",
+                        "scope": 104,
+                        "src": "1417:136:0",
+                        "visibility": "public"
+                    },
+                    {
+                        "canonicalName": "LoanAssetLib.OutstandingInfoStruct",
+                        "id": 73,
+                        "members": [
+                            {
+                                "constant": false,
+                                "id": 70,
+                                "mutability": "mutable",
+                                "name": "outstandingPrincipalAmount",
+                                "nameLocation": "1609:26:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 73,
+                                "src": "1601:34:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 69,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1601:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": false,
+                                "id": 72,
+                                "mutability": "mutable",
+                                "name": "repaymentNumberLeftToPay",
+                                "nameLocation": "1654:24:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 73,
+                                "src": "1646:32:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                },
+                                "typeName": {
+                                    "id": 71,
+                                    "name": "uint256",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "1646:7:0",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    }
+                                },
+                                "visibility": "internal"
+                            }
+                        ],
+                        "name": "OutstandingInfoStruct",
+                        "nameLocation": "1568:21:0",
+                        "nodeType": "StructDefinition",
+                        "scope": 104,
+                        "src": "1561:125:0",
+                        "visibility": "public"
+                    },
+                    {
+                        "anonymous": false,
+                        "eventSelector": "5a3727ca57436d1d850413574b206ec449b098888ab84407f441b37963e0e5dd",
+                        "id": 81,
+                        "name": "LoanIssued",
+                        "nameLocation": "1846:10:0",
+                        "nodeType": "EventDefinition",
+                        "parameters": {
+                            "id": 80,
+                            "nodeType": "ParameterList",
+                            "parameters": [
+                                {
+                                    "constant": false,
+                                    "id": 75,
+                                    "indexed": false,
+                                    "mutability": "mutable",
+                                    "name": "name",
+                                    "nameLocation": "1865:4:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 81,
+                                    "src": "1857:12:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    },
+                                    "typeName": {
+                                        "id": 74,
+                                        "name": "bytes32",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1857:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_bytes32",
+                                            "typeString": "bytes32"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                },
+                                {
+                                    "constant": false,
+                                    "id": 77,
+                                    "indexed": true,
+                                    "mutability": "mutable",
+                                    "name": "lender",
+                                    "nameLocation": "1887:6:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 81,
+                                    "src": "1871:22:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_address",
+                                        "typeString": "address"
+                                    },
+                                    "typeName": {
+                                        "id": 76,
+                                        "name": "address",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1871:7:0",
+                                        "stateMutability": "nonpayable",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_address",
+                                            "typeString": "address"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                },
+                                {
+                                    "constant": false,
+                                    "id": 79,
+                                    "indexed": false,
+                                    "mutability": "mutable",
+                                    "name": "totalAmount",
+                                    "nameLocation": "1903:11:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 81,
+                                    "src": "1895:19:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    },
+                                    "typeName": {
+                                        "id": 78,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1895:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                }
+                            ],
+                            "src": "1856:59:0"
+                        },
+                        "src": "1840:76:0"
+                    },
+                    {
+                        "anonymous": false,
+                        "eventSelector": "882fcb4d9854ecc1069766c2ad52c6704eff6251d32f131e17b07d13c050fc6c",
+                        "id": 85,
+                        "name": "UpdateInterestRateAndRate",
+                        "nameLocation": "1930:25:0",
+                        "nodeType": "EventDefinition",
+                        "parameters": {
+                            "id": 84,
+                            "nodeType": "ParameterList",
+                            "parameters": [
+                                {
+                                    "constant": false,
+                                    "id": 83,
+                                    "indexed": false,
+                                    "mutability": "mutable",
+                                    "name": "interestRate",
+                                    "nameLocation": "1964:12:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 85,
+                                    "src": "1956:20:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    },
+                                    "typeName": {
+                                        "id": 82,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "1956:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                }
+                            ],
+                            "src": "1955:22:0"
+                        },
+                        "src": "1924:54:0"
+                    },
+                    {
+                        "anonymous": false,
+                        "eventSelector": "577d3ffbd54bf4a32b4bf769a1a9bd4f4caed7897b3f74ac0540139d357d22df",
+                        "id": 87,
+                        "name": "LoanStarted",
+                        "nameLocation": "1992:11:0",
+                        "nodeType": "EventDefinition",
+                        "parameters": {
+                            "id": 86,
+                            "nodeType": "ParameterList",
+                            "parameters": [],
+                            "src": "2003:2:0"
+                        },
+                        "src": "1986:20:0"
+                    },
+                    {
+                        "anonymous": false,
+                        "eventSelector": "bfc93d8b5de55199897fd476f48e2821b68099d858a626bccdf38ffeb6290dcd",
+                        "id": 95,
+                        "name": "RepaymentPaid",
+                        "nameLocation": "2020:13:0",
+                        "nodeType": "EventDefinition",
+                        "parameters": {
+                            "id": 94,
+                            "nodeType": "ParameterList",
+                            "parameters": [
+                                {
+                                    "constant": false,
+                                    "id": 89,
+                                    "indexed": true,
+                                    "mutability": "mutable",
+                                    "name": "borrower",
+                                    "nameLocation": "2060:8:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 95,
+                                    "src": "2044:24:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_address",
+                                        "typeString": "address"
+                                    },
+                                    "typeName": {
+                                        "id": 88,
+                                        "name": "address",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "2044:7:0",
+                                        "stateMutability": "nonpayable",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_address",
+                                            "typeString": "address"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                },
+                                {
+                                    "constant": false,
+                                    "id": 91,
+                                    "indexed": false,
+                                    "mutability": "mutable",
+                                    "name": "repaymentAmount",
+                                    "nameLocation": "2087:15:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 95,
+                                    "src": "2079:23:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    },
+                                    "typeName": {
+                                        "id": 90,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "2079:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                },
+                                {
+                                    "constant": false,
+                                    "id": 93,
+                                    "indexed": false,
+                                    "mutability": "mutable",
+                                    "name": "repaymentNumber",
+                                    "nameLocation": "2121:15:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 95,
+                                    "src": "2113:23:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    },
+                                    "typeName": {
+                                        "id": 92,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "2113:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                }
+                            ],
+                            "src": "2033:110:0"
+                        },
+                        "src": "2014:130:0"
+                    },
+                    {
+                        "anonymous": false,
+                        "eventSelector": "344367e984e414c35840b952af5f2f7a99d2a4225a382b26d62087f4191204bd",
+                        "id": 97,
+                        "name": "LoanMatured",
+                        "nameLocation": "2158:11:0",
+                        "nodeType": "EventDefinition",
+                        "parameters": {
+                            "id": 96,
+                            "nodeType": "ParameterList",
+                            "parameters": [],
+                            "src": "2169:2:0"
+                        },
+                        "src": "2152:20:0"
+                    },
+                    {
+                        "anonymous": false,
+                        "eventSelector": "c200a1f31dd659e356e0f112c82558e25f49f7b0f84438691cd96f5cb3558823",
+                        "id": 103,
+                        "name": "LoanRepaid",
+                        "nameLocation": "2186:10:0",
+                        "nodeType": "EventDefinition",
+                        "parameters": {
+                            "id": 102,
+                            "nodeType": "ParameterList",
+                            "parameters": [
+                                {
+                                    "constant": false,
+                                    "id": 99,
+                                    "indexed": true,
+                                    "mutability": "mutable",
+                                    "name": "borrower",
+                                    "nameLocation": "2213:8:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 103,
+                                    "src": "2197:24:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_address",
+                                        "typeString": "address"
+                                    },
+                                    "typeName": {
+                                        "id": 98,
+                                        "name": "address",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "2197:7:0",
+                                        "stateMutability": "nonpayable",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_address",
+                                            "typeString": "address"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                },
+                                {
+                                    "constant": false,
+                                    "id": 101,
+                                    "indexed": false,
+                                    "mutability": "mutable",
+                                    "name": "repaymentAmount",
+                                    "nameLocation": "2231:15:0",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 103,
+                                    "src": "2223:23:0",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    },
+                                    "typeName": {
+                                        "id": 100,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "2223:7:0",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                }
+                            ],
+                            "src": "2196:51:0"
+                        },
+                        "src": "2180:68:0"
+                    }
+                ],
+                "scope": 105,
+                "src": "59:2192:0",
+                "usedErrors": [],
+                "usedEvents": [
+                    81,
+                    85,
+                    87,
+                    95,
+                    97,
+                    103
+                ]
+            }
+        ],
+        "src": "33:2220:0"
+    },
+    "functionHashes": {},
+    "gasEstimates": {
+        "creation": {
+            "codeDepositCost": "11400",
+            "executionCost": "infinite",
+            "totalCost": "infinite"
+        }
+    }
+}
