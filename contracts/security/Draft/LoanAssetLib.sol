@@ -22,27 +22,32 @@ library LoanAssetLib {
     }
 
     enum RepaymentStatusEnum {
+        NOT_ALREADY_DEFINED,
         UNPAID,
         PAID
     }
 
     enum BorrowerStatusEnum {
-        ACTIVE,
+        DISABLED,
+        INITIALIZED,
+        ENABLED,
         REPAID,
         DEFAULTED,
         ANTICIPATED
     }
 
     enum LenderStatusEnum {
-        ACTIVE,
-        INACTIVE
+        DISABLED,
+        ENABLED,
+        DEPOSITED,
+        REFUNDED
     }
 
     // ##################################### //
     // ############### STRUCT ############## //
     // ##################################### //
 
-    struct LoanAnag {
+    struct LoanAnagInfo {
         bytes32 name;
         bytes32 issuanceCountry;
         bytes32 currency;
@@ -52,10 +57,15 @@ library LoanAssetLib {
         uint256 maturityDate;
     }
 
-    struct LoanInfo {
+    struct LoanPaymentInfo {
         uint256 totalAmount;
-        uint256 interestRate;
+        uint256 minimumDenomination;
+        uint256[] spreadForBorrower;
+        uint256[] interestRates;
         uint256[] repaymentsDates;
+    }
+
+    struct LoanParticipantInfo {
         address[] lenders;
         uint256[] lendersShares;
         address[] borrowers;
@@ -63,13 +73,25 @@ library LoanAssetLib {
     }
 
     struct RepaymentInfo {
-        uint256 amount;
-        uint256 repaymentDate;
-        RepaymentStatusEnum repaymentStatus;
+        uint256 paymentDate;
+        uint256 interestRate;
+        RepaymentStatusEnum status;
     }
 
     struct OutstandingInfo {
         uint256 outstandingPrincipalAmount;
-        uint256 repaymentNumberLeftToPay;
+        uint256 nextRepaymentIndex;
+        uint256 anticipatedRepaymentAmount;
+    }
+
+    struct BorrowerInfo {
+        BorrowerStatusEnum status;
+        uint256 shares;
+        uint256 spread;
+    }
+
+    struct LenderInfo {
+        LenderStatusEnum status;
+        uint256 shares;
     }
 }

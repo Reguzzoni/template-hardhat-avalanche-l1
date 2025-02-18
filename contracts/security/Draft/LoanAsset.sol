@@ -8,22 +8,26 @@ contract LoanAsset is ILoanAsset {
 
     
     // TODO NEXT STEPS:
+    // change repayment calculation with the formula
+    // define the minimum denomination of the share
+    // add ERC20 token
+
     REVIEW CODE
     CREATE TEST
     CREATE PROXY
-    MULTIPLE LENDERS MAYBE?
 
     Lender and Borrowers: 
     The contract is deployed by a lender who sets the loan details, 
     including borrowers and their shares in the loan. 
      
     Borrowers are tracked by their status, share percentage, outstanding principal, and remaining repayments.
+    Lender are tracked by their shares in the loan.
 
     Loan Types: Amortized and Bullet
     Interest Rate Type: Fixed and Floating
     Loan Status: Preliminary, Live, Matured, Closed
-    Repayment Status: Unpaid, Paid
-    Borrower Status: Active, Repaid, Defaulted, Anticipated
+    Repayment Status: Undefined, Unpaid, Paid
+    Borrower Status: disabled, enabled, Repaid, Defaulted, Anticipated
 
     Loan Issuance:
     The lender deploys the contract and sets the loan details, 
@@ -97,6 +101,8 @@ contract LoanAsset is ILoanAsset {
     // ##################################################################
     // ############################ STATE ###############################
     // ##################################################################
+
+    // LOAN INFO
     address public immutable ISSUER;
 
     bytes32 public immutable NAME;
@@ -106,18 +112,22 @@ contract LoanAsset is ILoanAsset {
     uint256 public immutable TOTAL_AMOUNT;
     uint256 public immutable START_DATE; // loan start epoch time
     uint256 public immutable MATURITY_DATE; // maturity date loan epoch time
-    uint256 public interestRate; // interest rate bps
+
+    LoanAssetLib.LoanTypeEnum public immutable LOAN_TYPE;
+    LoanAssetLib.InterestRateTypeEnum public immutable INTEREST_RATE_TYPE;
+    LoanAssetLib.LoanStatusEnum public currentLoanStatus;
+
+    uint256 public immutable MINIMUM_DENOMINATION_PER_SHARE;
 
     // LENDER
-    address[] public LENDERS; // needed for iterations
-    mapping(address => uint256) public LENDERS_SHARES; // percentage of the shares
-    mapping(address => LoanAssetLib.LenderStatusEnum) public LENDERS_STATUS;
+    address[] public lenders;
+    mapping(address => LoanAssetLib.LenderInfo) public lendersInfo; // lenders info
 
     // BORROWER
-    address[] public BORROWERS; // needed for iterations
-    mapping(address => uint256) public BORROWERS_SHARES; // percentage of the shares
-    mapping(address => LoanAssetLib.BorrowerStatusEnum) public BORROWERS_STATUS;
+    address[] public borrowers; // needed for iterations
+    mapping(address => LoanAssetLib.BorrowerInfo) public borrowersInfo; // borrowers info
 
+    // PAYMENT DETAILS
     uint256 public immutable TOTAL_REPAYMENT_NUMBER;
     mapping(uint256 => uint256) public REPAYMENTS_DATES;
 
@@ -126,10 +136,7 @@ contract LoanAsset is ILoanAsset {
     mapping(address => LoanAssetLib.OutstandingInfo)
         public borrowersOutstandingPrincipals; // principal amount remained to be paid by the borrower
 
-    LoanAssetLib.LoanTypeEnum public immutable LOAN_TYPE;
-    LoanAssetLib.InterestRateTypeEnum public immutable INTEREST_RATE_TYPE;
-    LoanAssetLib.LoanStatusEnum public currentLoanStatus;
-
+    // UTILS CONTRACT
     // until 0.8.24 solidity, use _locked to prevent reentrancy
     bool private _locked;
 
@@ -148,49 +155,57 @@ contract LoanAsset is ILoanAsset {
     // #####################################################################
     // Modifier allowing lender to perform actions
     modifier onlyOwner() {
-        require(
-            msg.sender == ISSUER,
-            "Only the lender can perform this action."
-        );
+        if (msg.sender != ISSUER) {
+            revert InvalidACLOwnerError(
+                "Only the lender can perform this action.",
+                msg.sender
+            );
+        }
         _;
     }
 
     // only enable borrower
-    modifier onlyActiveBorrower() {
-        require(
-            BORROWERS_STATUS[msg.sender] ==
-                LoanAssetLib.BorrowerStatusEnum.ACTIVE,
-            "Only the lender can perform this action."
-        );
+    modifier onlyEnabledBorrower() {
+        if (
+            borrowersInfo[msg.sender].status !=
+            LoanAssetLib.BorrowerStatusEnum.ENABLED
+        ) {
+            revert InvalidACLBorrowerError(
+                "Only the lender can perform this action.",
+                msg.sender
+            );
+        }
+        _;
+    }
+
+    modifier onlyEnabledLender() {
+        if (
+            lendersInfo[msg.sender].status !=
+            LoanAssetLib.LenderStatusEnum.ENABLED
+        ) {
+            revert("Only the lender can perform this action.");
+        }
         _;
     }
 
     // prevent reentrancy
     modifier nonReentrant() {
-        require(!_locked, "ReentrancyGuard: reentrant call");
+        if (_locked) {
+            revert ReentrancyGuardError("ReentrancyGuard: reentrant call");
+        }
 
         _locked = true;
 
         _;
 
         _locked = false;
-
-        // solc 0.8.24
-        // assembly {
-        //     if tload(0) {
-        //         revert(0, 0)
-        //     }
-        //     tstore(0, 1)
-        // }
-        // _;
-        // assembly {
-        //     tstore(0, 0)
-        // }
     }
 
     // modifier to check if the contract is paused
     modifier whenNotPaused() {
-        require(!_isPaused, "Contract is paused");
+        if (_isPaused) {
+            revert PausedError("Contract is paused");
+        }
         _;
     }
 
@@ -204,68 +219,159 @@ contract LoanAsset is ILoanAsset {
     // ######################### CONSTRUCTOR ############################
     // ##################################################################
     constructor(
-        LoanAssetLib.LoanAnag memory _loanAnag,
-        LoanAssetLib.LoanInfo memory _loanInfo
+        LoanAssetLib.LoanAnagInfo memory _loanAnagInfo,
+        LoanAssetLib.LoanParticipantInfo memory _loanParticipantInfo,
+        LoanAssetLib.LoanPaymentInfo memory _loanPaymentInfo
     ) {
-        require(
-            _loanAnag.name != "",
-            "Name must be different from empty string."
-        );
+        // check anag
 
-        require(
-            _loanAnag.issuanceCountry != "",
-            "Issuance country must be different from empty string."
-        );
+        if (_loanAnagInfo.name == "") {
+            revert InvalidEmptyValueError(
+                "Name must be different from empty string."
+            );
+        }
 
-        require(
-            _loanAnag.currency != "",
-            "Currency must be different from empty string."
-        );
+        if (_loanAnagInfo.issuanceCountry == "") {
+            revert InvalidEmptyValueError(
+                "Issuance country must be different from empty string."
+            );
+        }
 
-        require(
-            _loanAnag.startDate > block.timestamp,
-            "Start date must be in the future."
-        );
+        if (_loanAnagInfo.currency == "") {
+            revert InvalidEmptyValueError(
+                "Currency must be different from empty string."
+            );
+        }
 
-        require(
-            _loanAnag.maturityDate > block.timestamp,
-            "Maturity date must be in the future."
-        );
+        if (_loanAnagInfo.startDate <= block.timestamp) {
+            revert InvalidMathRestrictionStartMaturityDateError(
+                "Start date must be in the future.",
+                _loanAnagInfo.startDate,
+                block.timestamp
+            );
+        }
 
-        require(
-            _loanInfo.totalAmount > 0,
-            "Total amount must be greater than zero."
-        );
-        require(
-            _loanInfo.borrowers.length == _loanInfo.borrowersShares.length,
-            "Mismatch in borrowers and shares."
-        );
-        require(
-            _loanAnag.startDate < _loanAnag.maturityDate,
-            "Start date must be before maturity date."
-        );
+        if (_loanAnagInfo.maturityDate <= block.timestamp) {
+            revert InvalidMathRestrictionStartMaturityDateError(
+                "Maturity date must be in the future.",
+                _loanAnagInfo.maturityDate,
+                block.timestamp
+            );
+        }
 
+        if (_loanAnagInfo.startDate >= _loanAnagInfo.maturityDate) {
+            revert InvalidMathRestrictionStartMaturityDateError(
+                "Start date must be before maturity date.",
+                _loanAnagInfo.startDate,
+                _loanAnagInfo.maturityDate
+            );
+        }
+
+        // check loan participant and payment info
+        if (_loanPaymentInfo.totalAmount == 0) {
+            revert InvalidZeroValueError(
+                "Total amount must be greater than zero."
+            );
+        }
+
+        // check minimum denomination
+        if (_loanPaymentInfo.minimumDenomination <= 0) {
+            revert InvalidZeroValueError(
+                "Minimum denomination must be greater than zero."
+            );
+        }
+
+        // check minimum denomination is a multiple
+        if (
+            _loanPaymentInfo.totalAmount %
+                _loanPaymentInfo.minimumDenomination !=
+            0
+        ) {
+            revert InvalidValueError(
+                "Total amount must be a multiple of the minimum denomination."
+            );
+        }
+
+        // check length borrower
+        if (_loanParticipantInfo.borrowers.length == 0) {
+            revert InvalidZeroLenghtError(
+                "Borrowers must be greater than zero."
+            );
+        }
+
+        if (
+            _loanParticipantInfo.borrowers.length !=
+            _loanParticipantInfo.borrowersShares.length
+        ) {
+            revert InvalidLengthSharesForBorrowerError(
+                "Mismatch in borrowers and shares.",
+                _loanParticipantInfo.borrowersShares.length,
+                _loanParticipantInfo.borrowers.length
+            );
+        }
+
+        // check length lender
+        if (_loanParticipantInfo.lenders.length == 0) {
+            revert InvalidZeroLenghtError("Lenders must be greater than zero.");
+        }
+
+        if (
+            _loanParticipantInfo.lenders.length !=
+            _loanParticipantInfo.lendersShares.length
+        ) {
+            revert InvalidLengthSharesForLenderError(
+                "Mismatch in lenders and shares.",
+                _loanParticipantInfo.lendersShares.length,
+                _loanParticipantInfo.lenders.length
+            );
+        }
+
+        if (
+            _loanPaymentInfo.spreadForBorrower.length !=
+            _loanParticipantInfo.borrowers.length
+        ) {
+            revert InvalidLenghtInterestRateForBorrower(
+                "Mismatch in borrowers and spread.",
+                _loanPaymentInfo.spreadForBorrower.length,
+                _loanParticipantInfo.borrowers.length
+            );
+        }
+
+        if (
+            _loanPaymentInfo.interestRates.length !=
+            _loanParticipantInfo.borrowers.length
+        ) {
+            revert InvalidLengthInterestRateForBorrowerError(
+                "Mismatch in borrowers and interest rates.",
+                _loanPaymentInfo.interestRates.length,
+                _loanParticipantInfo.borrowers.length
+            );
+        }
+
+        if (_loanPaymentInfo.repaymentsDates.length == 0) {
+            revert InvalidZeroLenghtError(
+                "Repayment dates must be greater than zero."
+            );
+        }
+
+        // start set state
         ISSUER = msg.sender;
 
-        NAME = _loanAnag.name;
-        ISSUANCE_COUNTRY = _loanAnag.issuanceCountry;
-        CURRENCY = _loanAnag.currency;
-        TOTAL_AMOUNT = _loanInfo.totalAmount;
-        START_DATE = _loanAnag.startDate;
-        MATURITY_DATE = _loanAnag.maturityDate;
-        LOAN_TYPE = _loanAnag.loanType;
-        INTEREST_RATE_TYPE = _loanAnag.interestRateType;
-        TOTAL_REPAYMENT_NUMBER = _loanInfo.repaymentsDates.length;
-
-        interestRate = _loanInfo.interestRate;
+        NAME = _loanAnagInfo.name;
+        ISSUANCE_COUNTRY = _loanAnagInfo.issuanceCountry;
+        CURRENCY = _loanAnagInfo.currency;
+        TOTAL_AMOUNT = _loanPaymentInfo.totalAmount;
+        START_DATE = _loanAnagInfo.startDate;
+        MATURITY_DATE = _loanAnagInfo.maturityDate;
+        LOAN_TYPE = _loanAnagInfo.loanType;
+        INTEREST_RATE_TYPE = _loanAnagInfo.interestRateType;
+        TOTAL_REPAYMENT_NUMBER = _loanPaymentInfo.repaymentsDates.length;
+        MINIMUM_DENOMINATION_PER_SHARE = _loanPaymentInfo.minimumDenomination;
 
         // set repayment dates
-        for (
-            uint256 repaymentIndex = 0;
-            repaymentIndex < _loanInfo.repaymentsDates.length;
-
-        ) {
-            REPAYMENTS_DATES[repaymentIndex] = _loanInfo.repaymentsDates[
+        uint256 repaymentsLength = _loanPaymentInfo.repaymentsDates.length; // gas optimization
+        for (uint256 repaymentIndex = 0; repaymentIndex < repaymentsLength; ) {
+            REPAYMENTS_DATES[repaymentIndex] = _loanPaymentInfo.repaymentsDates[
                 repaymentIndex
             ];
             unchecked {
@@ -274,48 +380,84 @@ contract LoanAsset is ILoanAsset {
         }
 
         // set lenders
-        uint256 lendersLength = _loanInfo.lenders.length; // gas optimization
+        uint256 lendersLength = _loanParticipantInfo.lenders.length; // gas optimization
         for (uint256 lenderIndex = 0; lenderIndex < lendersLength; ) {
-            address lender = _loanInfo.lenders[lenderIndex];
-            uint256 share = _loanInfo.lendersShares[lenderIndex];
+            address lender = _loanParticipantInfo.lenders[lenderIndex];
+            uint256 shares = _loanParticipantInfo.lendersShares[lenderIndex];
 
-            require(share > 0, "Lender share must be greater than zero.");
+            if (shares == 0) {
+                revert InvalidZeroValueError(
+                    "Lender share must be greater than zero."
+                );
+            }
+
+            // check if share is minimum denomination
+            if (
+                (_loanPaymentInfo.totalAmount / shares) %
+                    _loanPaymentInfo.minimumDenomination !=
+                0
+            ) {
+                revert InvalidValueError(
+                    "Shares must be a multiple of the minimum denomination."
+                );
+            }
 
             // set lender status
-            LENDERS.push(lender);
-            LENDERS_SHARES[lender] = share;
-            LENDERS_STATUS[lender] = LoanAssetLib.LenderStatusEnum.ACTIVE;
+            lenders.push(lender);
+            lendersInfo[lender] = LoanAssetLib.LenderInfo({
+                status: LoanAssetLib.LenderStatusEnum.ENABLED,
+                shares: shares
+            });
 
             unchecked {
                 lenderIndex++;
             }
         }
 
-        uint256 repaymentsLength = _loanInfo.repaymentsDates.length; // gas optimization
-
         // set percentage of shares for each borrower and repayment
-        uint256 borrowersLength = _loanInfo.borrowers.length; // gas optimization
+        uint256 borrowersLength = _loanParticipantInfo.borrowers.length; // gas optimization
         for (uint256 borrowerIndex = 0; borrowerIndex < borrowersLength; ) {
-            address borrower = _loanInfo.borrowers[borrowerIndex];
-            uint256 share = _loanInfo.borrowersShares[borrowerIndex];
+            address borrower = _loanParticipantInfo.borrowers[borrowerIndex];
+            uint256 shares = _loanParticipantInfo.borrowersShares[
+                borrowerIndex
+            ];
 
-            require(share > 0, "Borrower share must be greater than zero.");
+            if (shares == 0) {
+                revert InvalidZeroValueError(
+                    "Borrower share must be greater than zero."
+                );
+            }
+
+            // check if share is minimum denomination
+            if (
+                (_loanPaymentInfo.totalAmount / shares) %
+                    _loanPaymentInfo.minimumDenomination !=
+                0
+            ) {
+                revert InvalidValueError(
+                    "Shares must be a multiple of the minimum denomination."
+                );
+            }
 
             // set borrower status
-            BORROWERS.push(borrower);
-            BORROWERS_SHARES[borrower] = share;
-            BORROWERS_STATUS[borrower] = LoanAssetLib.BorrowerStatusEnum.ACTIVE;
+            borrowers.push(borrower);
+            borrowersInfo[borrower] = LoanAssetLib.BorrowerInfo({
+                status: LoanAssetLib.BorrowerStatusEnum.ENABLED,
+                shares: shares,
+                spread: _loanPaymentInfo.spreadForBorrower[borrowerIndex]
+            });
 
             // set outstanding principal amount and repayment number left to pay
             borrowersOutstandingPrincipals[borrower] = LoanAssetLib
                 .OutstandingInfo({
-                    outstandingPrincipalAmount: (TOTAL_AMOUNT * share) / 100,
-                    repaymentNumberLeftToPay: repaymentsLength
+                    outstandingPrincipalAmount: (TOTAL_AMOUNT * shares) / 100,
+                    nextRepaymentIndex: repaymentsLength + 1, // + 1 principal payment
+                    anticipatedRepaymentAmount: 0
                 });
 
             // if IR fixed, calculate repayment amount for each borrower and all next repayments
             if (
-                _loanAnag.interestRateType ==
+                _loanAnagInfo.interestRateType ==
                 LoanAssetLib.InterestRateTypeEnum.FIXED
             ) {
                 for (
@@ -324,11 +466,11 @@ contract LoanAsset is ILoanAsset {
 
                 ) {
                     // create repayments
-                    borrowersRepayments[_loanInfo.borrowers[borrowerIndex]][
-                        repaymentIndex
-                    ] = _createNextRepayment(
-                        _loanInfo.borrowers[borrowerIndex],
-                        _loanInfo.repaymentsDates[repaymentIndex]
+                    borrowersRepayments[
+                        _loanParticipantInfo.borrowers[borrowerIndex]
+                    ][repaymentIndex] = _createNextRepayment(
+                        _loanPaymentInfo.repaymentsDates[repaymentIndex],
+                        _loanPaymentInfo.interestRates[borrowerIndex]
                     );
 
                     unchecked {
@@ -336,18 +478,21 @@ contract LoanAsset is ILoanAsset {
                     }
                 }
             } else if (
-                _loanAnag.interestRateType ==
+                _loanAnagInfo.interestRateType ==
                 LoanAssetLib.InterestRateTypeEnum.FLOATING
             ) {
                 // if floating and the IR must be inserted for each repayment manually, so set only the first one
-                borrowersRepayments[_loanInfo.borrowers[borrowerIndex]][
-                    0
-                ] = _createNextRepayment(
-                    _loanInfo.borrowers[borrowerIndex],
-                    _loanInfo.repaymentsDates[0]
+                borrowersRepayments[
+                    _loanParticipantInfo.borrowers[borrowerIndex]
+                ][0] = _createNextRepayment(
+                    _loanPaymentInfo.repaymentsDates[0],
+                    _loanPaymentInfo.interestRates[borrowerIndex]
                 );
             } else {
-                revert("Invalid interest rate type.");
+                revert UnknownValueInterestRateType(
+                    "Unknown interest rate type.",
+                    _loanAnagInfo.interestRateType
+                );
             }
 
             unchecked {
@@ -376,41 +521,81 @@ contract LoanAsset is ILoanAsset {
         emit Unpaused();
     }
 
+    // deposit funds for the loan
+    function depositFunds() external payable override onlyEnabledLender {
+        // if preliminary
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.PRELIMINARY) {
+            revert InvalidValueLoanStatus(
+                "Loan is not in preliminary state!",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.PRELIMINARY
+            );
+        }
+
+        uint256 amountToFund = (lendersInfo[msg.sender].shares * TOTAL_AMOUNT) /
+            100;
+        if (msg.value != amountToFund) {
+            revert InvalidAmountToFund(
+                "Deposit amount must be greater than zero.",
+                msg.value
+            );
+        }
+
+        lendersInfo[msg.sender].status = LoanAssetLib
+            .LenderStatusEnum
+            .DEPOSITED;
+
+        emit FundsDepositedEvent(msg.sender, msg.value);
+    }
+
     // create next repayment
     function _createNextRepayment(
-        address _borrower,
-        uint256 _paymentDate
-    ) private view returns (LoanAssetLib.RepaymentInfo memory repaymentInfo) {
+        uint256 _paymentDate,
+        uint256 _interestRate
+    ) private pure returns (LoanAssetLib.RepaymentInfo memory repaymentInfo) {
         return
             LoanAssetLib.RepaymentInfo({
-                amount: _calculateNextRepaymentAmountByBorrower(_borrower),
-                repaymentDate: _paymentDate,
-                repaymentStatus: LoanAssetLib.RepaymentStatusEnum.UNPAID
+                paymentDate: _paymentDate,
+                interestRate: _interestRate,
+                status: LoanAssetLib.RepaymentStatusEnum.UNPAID
             });
     }
 
     // calculate amount to pay based on outstanding
     function _calculateNextRepaymentAmountByBorrower(
-        address borrower
+        address _borrower
     ) private view returns (uint256) {
         LoanAssetLib.OutstandingInfo
             memory borrowerOutstandingInfo = borrowersOutstandingPrincipals[
-                borrower
+                _borrower
             ];
 
+        LoanAssetLib.RepaymentInfo
+            memory borrowerRepaymentInfo = borrowersRepayments[_borrower][
+                borrowerOutstandingInfo.nextRepaymentIndex
+            ];
+
+        LoanAssetLib.BorrowerInfo memory borrowerInfo = borrowersInfo[
+            _borrower
+        ];
+
+        /* TODO amount = (outstanding * ir) / (1 - (1+ ir)^-repayment left ) */
         uint256 interestMatured = (borrowerOutstandingInfo
-            .outstandingPrincipalAmount * interestRate) / 100; /*interest*/
+            .outstandingPrincipalAmount *
+            (borrowerRepaymentInfo.interestRate +
+                borrowerInfo.spread)); /*interest*/
         if (LoanAssetLib.LoanTypeEnum.AMORTIZED == LOAN_TYPE) {
             uint256 repaymentsCountLeftToPay = TOTAL_REPAYMENT_NUMBER -
-                borrowerOutstandingInfo.repaymentNumberLeftToPay;
+                borrowerOutstandingInfo.nextRepaymentIndex +
+                1; // for principal payment
             return
-                (borrowerOutstandingInfo.outstandingPrincipalAmount *
+                (borrowerOutstandingInfo.outstandingPrincipalAmount /
                     repaymentsCountLeftToPay) /* principal */ +
                 interestMatured; /*interest*/
         } else if (LoanAssetLib.LoanTypeEnum.BULLET == LOAN_TYPE) {
             return interestMatured; /*interest*/
         } else {
-            revert("Invalid loan type.");
+            revert InvalidValueLoanType("Invalid loan type.", LOAN_TYPE);
         }
     }
 
@@ -419,174 +604,225 @@ contract LoanAsset is ILoanAsset {
     }
 
     // Over the start date, the loan can be started
-    function setLoanStart() external onlyOwner {
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.PRELIMINARY,
-            "Loan is not in preliminary state!"
-        );
+    function setLoanStart() external override onlyOwner {
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.PRELIMINARY) {
+            revert InvalidValueLoanStatus(
+                "Loan is not in preliminary state!",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.PRELIMINARY
+            );
+        }
         currentLoanStatus = LoanAssetLib.LoanStatusEnum.LIVE;
+
+        // moves token to each borrower
+        for (uint256 borrowerIndex = 0; borrowerIndex < borrowers.length; ) {
+            address borrower = borrowers[borrowerIndex];
+
+            // transfer native token into the smart contract to the borrowers
+            address payable borrowerAddress = payable(borrower);
+            uint256 amount = (borrowersInfo[borrower].shares * TOTAL_AMOUNT) /
+                100;
+
+            borrowerAddress.transfer(amount);
+            unchecked {
+                borrowerIndex++;
+            }
+        }
 
         emit LoanStartedEvent();
     }
 
     // set interest rate
     function updateInterestRateAndRepayments(
-        uint256 _interestRate
+        uint256[] calldata _interestRates
     ) external onlyOwner {
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.PRELIMINARY,
-            "Loan is not in preliminary state!"
-        );
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.LIVE) {
+            revert InvalidValueLoanStatus(
+                "Loan is not in preliminary state!",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.LIVE
+            );
+        }
 
-        require(_interestRate > 0, "Interest rate must be greater than zero.");
+        if (_interestRates.length == 0) {
+            revert InvalidZeroLenghtError(
+                "Interest length IR must be greater than zero."
+            );
+        }
 
-        require(
-            INTEREST_RATE_TYPE == LoanAssetLib.InterestRateTypeEnum.FLOATING,
-            "Interest rate type must be floating."
-        );
+        uint256 borrowersLength = borrowers.length; // gas optimization
 
-        interestRate = _interestRate;
+        if (_interestRates.length != borrowersLength) {
+            revert InvalidLenghtInterestRateForBorrower(
+                "Mismatch in interest rate and borrowers.",
+                _interestRates.length,
+                borrowersLength
+            );
+        }
 
-        // set next repayment amount for each borrower
-        uint256 borrowersLength = BORROWERS.length; // gas optimization
-        for (uint256 borrowersIndex = 0; borrowersIndex < borrowersLength; ) {
-            address borrower = BORROWERS[borrowersIndex];
+        if (INTEREST_RATE_TYPE != LoanAssetLib.InterestRateTypeEnum.FLOATING) {
+            revert InvalidValueInterestRateType(
+                "Interest rate type must be floating in order to update interest rate.",
+                INTEREST_RATE_TYPE,
+                LoanAssetLib.InterestRateTypeEnum.FLOATING
+            );
+        }
 
+        // update interest rate
+        for (uint256 borrowerIndex = 0; borrowerIndex < borrowersLength; ) {
+            address borrowerAddress = borrowers[borrowerIndex];
+
+            // set next repayment amount for each borrower
             LoanAssetLib.OutstandingInfo
                 memory borrowerOutstandingInfo = borrowersOutstandingPrincipals[
-                    borrower
+                    borrowerAddress
                 ];
 
             uint256 nextRepaymentIndex = TOTAL_REPAYMENT_NUMBER -
-                borrowerOutstandingInfo.repaymentNumberLeftToPay +
-                1; // gas optimization
+                borrowerOutstandingInfo.nextRepaymentIndex; // gas optimization
 
             // if someone has already paid all the repayments, skip
             if (nextRepaymentIndex >= TOTAL_REPAYMENT_NUMBER) {
                 unchecked {
-                    borrowersIndex++;
+                    borrowerIndex++;
                 }
                 continue;
             }
 
-            borrowersRepayments[BORROWERS[borrowersIndex]][
+            // update repayment info
+            borrowersRepayments[borrowerAddress][
                 nextRepaymentIndex
             ] = LoanAssetLib.RepaymentInfo({
-                amount: _calculateNextRepaymentAmountByBorrower(
-                    BORROWERS[borrowersIndex]
-                ),
-                repaymentDate: REPAYMENTS_DATES[nextRepaymentIndex],
-                repaymentStatus: LoanAssetLib.RepaymentStatusEnum.UNPAID
+                paymentDate: REPAYMENTS_DATES[nextRepaymentIndex],
+                interestRate: _interestRates[borrowerIndex],
+                status: LoanAssetLib.RepaymentStatusEnum.UNPAID
             });
 
             unchecked {
-                borrowersIndex++;
+                borrowerIndex++;
             }
         }
 
-        emit UpdateInterestPaymentAndRepaymentsEvent(_interestRate);
+        emit UpdateInterestRateAndRepaymentsEvent(_interestRates);
     }
 
     // Borrower request to pay a repayment
     function payRepayment(
-        uint256 repaymentNumber
-    ) external payable nonReentrant onlyActiveBorrower {
+        uint256 repaymentIndex
+    ) external payable nonReentrant onlyEnabledBorrower {
         // check loan status
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.LIVE,
-            "Loan is not live."
-        );
 
         LoanAssetLib.OutstandingInfo
             storage borrowerOutstandingInfo = borrowersOutstandingPrincipals[
                 msg.sender
             ];
 
-        require(
-            repaymentNumber < TOTAL_REPAYMENT_NUMBER,
-            "Invalid repayment number."
-        );
+        if (repaymentIndex >= TOTAL_REPAYMENT_NUMBER) {
+            revert InvalidValueRepaymentIndex(
+                "Invalid repayment number.",
+                TOTAL_REPAYMENT_NUMBER,
+                repaymentIndex
+            );
+        }
 
         LoanAssetLib.RepaymentInfo storage repaymentInfo = borrowersRepayments[
             msg.sender
-        ][repaymentNumber];
+        ][repaymentIndex];
 
         // check on repayment status
-        require(
-            repaymentInfo.repaymentStatus ==
-                LoanAssetLib.RepaymentStatusEnum.UNPAID,
-            "Repayment has already been paid."
-        );
-        require(
-            repaymentInfo.repaymentDate <= block.timestamp,
-            "Repayment date has not been reached yet."
-        );
+        if (repaymentInfo.status != LoanAssetLib.RepaymentStatusEnum.UNPAID) {
+            revert InvalidStatusRepayFromAllBorrowers(
+                "Repayment is not in status unpaid.",
+                msg.sender,
+                repaymentInfo.status,
+                LoanAssetLib.RepaymentStatusEnum.UNPAID
+            );
+        }
+
+        if (repaymentInfo.paymentDate > block.timestamp) {
+            revert InvalidMathRestrictionStartMaturityDateError(
+                "Repayment date has not been reached yet.",
+                repaymentInfo.paymentDate,
+                block.timestamp
+            );
+        }
 
         // check on amount
         uint256 repaymentAmount = _calculateNextRepaymentAmountByBorrower(
             msg.sender
         );
-        require(
-            repaymentAmount != 0,
-            "Repayment must be defined before being paid."
-        );
-        require(
-            msg.value == repaymentAmount,
-            "Incorrect repayment amount sent."
-        );
+        if (repaymentAmount == 0) {
+            revert InvalidZeroValueError(
+                "Repayment must be defined before being paid."
+            );
+        }
 
+        if (msg.value != repaymentAmount) {
+            revert InvalidValueError("Incorrect repayment amount sent.");
+        }
         // update outstanding info
         if (LoanAssetLib.LoanTypeEnum.AMORTIZED == LOAN_TYPE) {
             borrowerOutstandingInfo
                 .outstandingPrincipalAmount -= repaymentAmount;
         }
-        borrowerOutstandingInfo.repaymentNumberLeftToPay--;
+        borrowerOutstandingInfo.nextRepaymentIndex++;
 
         // update repayment status
-        repaymentInfo.repaymentStatus = LoanAssetLib.RepaymentStatusEnum.PAID;
+        repaymentInfo.status = LoanAssetLib.RepaymentStatusEnum.PAID;
 
         // payment from msg.sender to smart contract on the payable function
         // TODO ERC20 transfer
 
-        emit RepaymentPaidEvent(msg.sender, repaymentAmount, repaymentNumber);
+        emit RepaymentPaidEvent(msg.sender, repaymentAmount, repaymentIndex);
     }
 
     // Pay principal
-    function payPrincipal() external payable nonReentrant onlyActiveBorrower {
+    function payPrincipal()
+        external
+        payable
+        override
+        nonReentrant
+        onlyEnabledBorrower
+    {
         // check loan status
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.MATURED,
-            "Loan is not matured."
-        );
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.MATURED) {
+            revert InvalidValueLoanStatus(
+                "Loan is not matured.",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.MATURED
+            );
+        }
 
         uint principalAmount = _calculateNextRepaymentAmountByBorrower(
             msg.sender
         );
-        require(
-            principalAmount != 0,
-            "No outstanding principal amount to pay."
-        );
-
+        if (principalAmount <= 0) {
+            revert InvalidZeroValueError(
+                "No outstanding principal amount to pay."
+            );
+        }
         LoanAssetLib.OutstandingInfo
             storage borrowerOutstandingInfo = borrowersOutstandingPrincipals[
                 msg.sender
             ];
 
-        require(
-            borrowerOutstandingInfo.outstandingPrincipalAmount != 0,
-            "No outstanding principal amount to pay."
-        );
-        require(
-            msg.value == borrowerOutstandingInfo.outstandingPrincipalAmount,
-            "Incorrect principal amount sent."
-        );
+        if (borrowerOutstandingInfo.outstandingPrincipalAmount == 0) {
+            revert InvalidZeroValueError(
+                "No outstanding principal amount to pay."
+            );
+        }
+        if (msg.value != borrowerOutstandingInfo.outstandingPrincipalAmount) {
+            revert InvalidValueError("Incorrect principal amount sent.");
+        }
 
         // update outstanding principal amount and repayment number left to pay
         borrowerOutstandingInfo.outstandingPrincipalAmount = 0;
-        borrowerOutstandingInfo.repaymentNumberLeftToPay = 0;
+        borrowerOutstandingInfo.nextRepaymentIndex = 0;
 
         // update borrower status
-        BORROWERS_STATUS[msg.sender] = LoanAssetLib.BorrowerStatusEnum.REPAID;
+        borrowersInfo[msg.sender].status = LoanAssetLib
+            .BorrowerStatusEnum
+            .REPAID;
 
         // payment from msg.sender to smart contract on the payable function
         // TODO ERC20 transfer
@@ -595,70 +831,113 @@ contract LoanAsset is ILoanAsset {
     }
 
     function setDefault(address borrower) external onlyOwner {
-        require(
-            BORROWERS_STATUS[borrower] ==
-                LoanAssetLib.BorrowerStatusEnum.ACTIVE,
-            "Borrower is not active."
-        );
+        if (
+            borrowersInfo[borrower].status !=
+            LoanAssetLib.BorrowerStatusEnum.ENABLED
+        ) {
+            revert InvalidACLBorrowerError(
+                "Borrower is not enabled.",
+                borrower
+            );
+        }
 
-        BORROWERS_STATUS[borrower] = LoanAssetLib.BorrowerStatusEnum.DEFAULTED;
+        borrowersInfo[borrower].status = LoanAssetLib
+            .BorrowerStatusEnum
+            .DEFAULTED;
     }
 
-    function enableAnticipatePayment(address borrower) external onlyOwner {
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.LIVE,
-            "Loan must be live to anticipate payment."
-        );
+    function enableAnticipatePayment(
+        address _borrower,
+        uint256 _totalAmountToAnticipate
+    ) external onlyOwner {
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.LIVE) {
+            revert InvalidValueLoanStatus(
+                "Loan must be live to anticipate payment.",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.LIVE
+            );
+        }
 
-        require(
-            BORROWERS_STATUS[borrower] ==
-                LoanAssetLib.BorrowerStatusEnum.ACTIVE,
-            "Borrower is not active to anticipate payment."
-        );
+        if (
+            borrowersInfo[_borrower].status !=
+            LoanAssetLib.BorrowerStatusEnum.ENABLED
+        ) {
+            revert InvalidACLBorrowerError(
+                "Borrower is not enabled to anticipate payment.",
+                _borrower
+            );
+        }
+
+        if (_totalAmountToAnticipate <= 0) {
+            revert InvalidZeroValueError(
+                "Total amount to anticipate must be greater than zero."
+            );
+        }
 
         // check borrower outstanding
         LoanAssetLib.OutstandingInfo
-            memory borrowerOutstandingInfo = borrowersOutstandingPrincipals[
-                borrower
+            storage borrowerOutstandingInfo = borrowersOutstandingPrincipals[
+                _borrower
             ];
 
-        require(
-            borrowerOutstandingInfo.outstandingPrincipalAmount != 0 &&
-                borrowerOutstandingInfo.repaymentNumberLeftToPay != 0,
-            "No outstanding principal amount or repayment left to pay."
-        );
+        if (borrowerOutstandingInfo.outstandingPrincipalAmount <= 0) {
+            revert InvalidZeroValueError(
+                "No outstanding principal amount left to pay."
+            );
+        }
 
-        BORROWERS_STATUS[msg.sender] = LoanAssetLib
+        borrowerOutstandingInfo
+            .anticipatedRepaymentAmount = _totalAmountToAnticipate;
+
+        borrowersInfo[msg.sender].status = LoanAssetLib
             .BorrowerStatusEnum
             .ANTICIPATED;
     }
 
     function disableAnticipatePayment(address borrower) external onlyOwner {
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.LIVE,
-            "Loan must be live to anticipate payment."
-        );
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.LIVE) {
+            revert InvalidValueLoanStatus(
+                "Loan must be live to anticipate payment.",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.LIVE
+            );
+        }
 
-        require(
-            BORROWERS_STATUS[borrower] ==
-                LoanAssetLib.BorrowerStatusEnum.ANTICIPATED,
-            "Borrower is not enabled to anticipate payment."
-        );
+        if (
+            borrowersInfo[msg.sender].status !=
+            LoanAssetLib.BorrowerStatusEnum.ANTICIPATED
+        ) {
+            revert InvalidACLBorrowerError(
+                "Borrower is not enabled to anticipate payment.",
+                msg.sender
+            );
+        }
 
-        BORROWERS_STATUS[msg.sender] = LoanAssetLib.BorrowerStatusEnum.ACTIVE;
+        borrowersOutstandingPrincipals[borrower].anticipatedRepaymentAmount = 0;
+
+        borrowersInfo[msg.sender].status = LoanAssetLib
+            .BorrowerStatusEnum
+            .ENABLED;
     }
 
     function anticipatePayment() external payable nonReentrant {
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.LIVE,
-            "Loan must be live to anticipate payment."
-        );
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.LIVE) {
+            revert InvalidValueLoanStatus(
+                "Loan must be live to close it.",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.LIVE
+            );
+        }
 
-        require(
-            BORROWERS_STATUS[msg.sender] ==
-                LoanAssetLib.BorrowerStatusEnum.ANTICIPATED,
-            "Borrower is not enabled to anticipate payment."
-        );
+        if (
+            borrowersInfo[msg.sender].status !=
+            LoanAssetLib.BorrowerStatusEnum.ANTICIPATED
+        ) {
+            revert InvalidACLBorrowerError(
+                "Borrower is not enabled to anticipate payment.",
+                msg.sender
+            );
+        }
 
         address borrower = msg.sender;
 
@@ -667,20 +946,21 @@ contract LoanAsset is ILoanAsset {
                 borrower
             ];
 
-        uint256 paymentAmount = (borrowerOutstandingInfo
-            .outstandingPrincipalAmount * interestRate) / 100;
+        uint256 paymentAmount = borrowerOutstandingInfo
+            .anticipatedRepaymentAmount;
 
-        require(
-            msg.value >= paymentAmount,
-            "Insufficient funds to anticipate payment."
-        );
+        if (msg.value < paymentAmount) {
+            revert InsufficientFunds(
+                "Insufficient funds to anticipate payment."
+            );
+        }
 
         // update outstanding principal amount and repayment number left to pay
         borrowerOutstandingInfo.outstandingPrincipalAmount = 0;
-        borrowerOutstandingInfo.repaymentNumberLeftToPay = 0;
+        borrowerOutstandingInfo.nextRepaymentIndex = 0;
 
         // update borrower status
-        BORROWERS_STATUS[borrower] = LoanAssetLib.BorrowerStatusEnum.REPAID;
+        borrowersInfo[borrower].status = LoanAssetLib.BorrowerStatusEnum.REPAID;
 
         // payment from msg.sender to smart contract on the payable function
         // TODO ERC20 transfer
@@ -689,44 +969,53 @@ contract LoanAsset is ILoanAsset {
     }
 
     // set loan matured request
-    function setLoanMatured() external onlyOwner {
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.LIVE,
-            "Loan must be live to close it."
-        );
-        require(block.timestamp >= MATURITY_DATE, "Loan has not matured yet.");
+    function setLoanMatured() external override onlyOwner {
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.LIVE) {
+            revert InvalidValueLoanStatus(
+                "Loan must be live to close it.",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.LIVE
+            );
+        }
+        if (block.timestamp < MATURITY_DATE) {
+            revert InvalidMathRestrictionStartMaturityDateError(
+                "Loan has not matured yet.",
+                block.timestamp,
+                MATURITY_DATE
+            );
+        }
         currentLoanStatus = LoanAssetLib.LoanStatusEnum.MATURED;
 
         emit LoanMaturedEvent();
     }
 
     // close loan request
-    function setLoanClosed() external onlyOwner {
-        require(
-            currentLoanStatus == LoanAssetLib.LoanStatusEnum.MATURED,
-            "Loan must be matured before closing."
-        );
+    function setLoanClosed() external override onlyOwner {
+        if (currentLoanStatus != LoanAssetLib.LoanStatusEnum.MATURED) {
+            revert InvalidValueLoanStatus(
+                "Loan must be matured before closing.",
+                currentLoanStatus,
+                LoanAssetLib.LoanStatusEnum.MATURED
+            );
+        }
 
         // check each borrower paid outstanding principal amount (so implicit repayments)
-        uint256 borrowersLength = BORROWERS.length; // gas optimization
+        uint256 borrowersLength = borrowers.length; // gas optimization
         for (uint256 borrowersIndex = 0; borrowersIndex < borrowersLength; ) {
-            // BUT if some borrower is set to DEFAULTED, skip
+            // if some borrower has not paid all the repayments, revert
             if (
-                BORROWERS_STATUS[BORROWERS[borrowersIndex]] ==
-                LoanAssetLib.BorrowerStatusEnum.DEFAULTED
+                borrowersOutstandingPrincipals[borrowers[borrowersIndex]]
+                    .outstandingPrincipalAmount != 0
             ) {
-                unchecked {
-                    borrowersIndex++;
-                }
-                continue;
+                revert InvalidAmountRepayFromAllBorrowers(
+                    "All borrowers must pay all repayments before closing.",
+                    borrowers[borrowersIndex],
+                    borrowersOutstandingPrincipals[borrowers[borrowersIndex]]
+                        .outstandingPrincipalAmount,
+                    0
+                );
             }
 
-            // if some borrower has not paid all the repayments, revert
-            require(
-                borrowersOutstandingPrincipals[BORROWERS[borrowersIndex]]
-                    .repaymentNumberLeftToPay == 0,
-                "All borrowers must pay all repayments before closing."
-            );
             unchecked {
                 borrowersIndex++;
             }
@@ -735,8 +1024,12 @@ contract LoanAsset is ILoanAsset {
         currentLoanStatus = LoanAssetLib.LoanStatusEnum.CLOSED;
     }
 
-    function withdrawFunds() external nonReentrant onlyOwner {
-        (bool success, ) = msg.sender.call{value: address(this).balance}("");
-        require(success, "Transfer failed");
+    function withdrawFunds() external override nonReentrant onlyEnabledLender {
+        uint256 amountToWithDraw = (address(this).balance *
+            lendersInfo[msg.sender].shares) / 100;
+        (bool success, ) = msg.sender.call{value: amountToWithDraw}("");
+        if (!success) {
+            revert InvalidACLBorrowerError("Transfer failed.", msg.sender);
+        }
     }
 }
