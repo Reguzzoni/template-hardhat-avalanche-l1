@@ -87,7 +87,11 @@ interface ILoanAsset {
         LoanAssetLib.RepaymentStatusEnum expectedBorrowerStatus
     );
 
-    error InvalidAmountToFund(string err, uint256 amountToFund);
+    error InvalidAmountToFund(
+        string err,
+        uint256 amountToFund,
+        uint256 amountSent
+    );
 
     error InvalidAmountRepayFromAllBorrowers(
         string err,

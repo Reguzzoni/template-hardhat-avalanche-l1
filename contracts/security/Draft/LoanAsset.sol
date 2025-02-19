@@ -17,11 +17,11 @@ contract LoanAsset is ILoanAsset {
     CREATE PROXY
 
     Lender and Borrowers: 
-    The contract is deployed by a lender who sets the loan details, 
+    The contract is deployed by a issuer who sets the loan details, 
     including borrowers and their shares in the loan. 
      
     Borrowers are tracked by their status, share percentage, outstanding principal, and remaining repayments.
-    Lender are tracked by their shares in the loan.
+    Lenders are tracked by their shares in the loan.
 
     Loan Types: Amortized and Bullet
     Interest Rate Type: Fixed and Floating
@@ -30,7 +30,7 @@ contract LoanAsset is ILoanAsset {
     Borrower Status: disabled, enabled, Repaid, Defaulted, Anticipated
 
     Loan Issuance:
-    The lender deploys the contract and sets the loan details, 
+    The issuer deploys the contract and sets the loan details, 
     including the loan name, issuance country, currency, total amount, 
     start date, maturity date, interest rate, loan type, 
     interest rate type, and repayment dates.
@@ -43,10 +43,10 @@ contract LoanAsset is ILoanAsset {
     Borrowers are added with their share percentage in the loan.
 
     Loan Start:
-    The lender can start the loan after the start date.
+    The issuer can start the loan after the start date.
 
     Interest Rate Update:
-    The lender can update the interest rate for floating loans.
+    The issuer can update the interest rate for floating loans.
 
     Repayments:
     Borrowers can pay their repayments based on the payment date and amount.
@@ -55,32 +55,34 @@ contract LoanAsset is ILoanAsset {
     Borrowers can pay the principal amount after the loan matures.
 
     Default:
-    The lender can set a borrower's status to defaulted.
+    The issuer can set a borrower's status to defaulted.
 
     Anticipate Payment:
     Borrowers can request to pay the loan early.
 
     Loan Maturity:
-    The lender can set the loan status to matured after the maturity date.
+    The issuer can set the loan status to matured after the maturity date.
 
     Loan Closure:
     The lender can close the loan after all borrowers have paid their outstanding principal and repayments.
 
     Withdraw Funds:
-    The lender can withdraw the funds from the contract after the loan is closed.
+    A allowed lender can withdraw the funds from the contract after the loan is closed.
 
     Pausing:
-    The contract can be paused and unpaused by the lender.
+    The contract can be paused and unpaused by the issuer.
 
     Access Control:
-    The contract uses access control to restrict certain functions to the lender.
+    The contract uses access control to restrict certain functions to the issuer.
 
     Reentrancy Guard:
     The contract uses a reentrancy guard to prevent reentrancy attacks.
 
     Events:
     The contract emits events for 
+    funds deposited,
     loan issuance, 
+    loan funded,
     interest rate updates, 
     loan start, 
     repayments,
@@ -159,7 +161,7 @@ contract LoanAsset is ILoanAsset {
     modifier onlyOwner() {
         if (msg.sender != ISSUER) {
             revert InvalidACLOwnerError(
-                "Only the lender can perform this action.",
+                "Only the issuer can perform this action.",
                 msg.sender
             );
         }
@@ -173,7 +175,7 @@ contract LoanAsset is ILoanAsset {
             LoanAssetLib.BorrowerStatusEnum.ENABLED
         ) {
             revert InvalidACLBorrowerError(
-                "Only the lender can perform this action.",
+                "Only a enabled borrower can perform this action.",
                 msg.sender
             );
         }
@@ -185,7 +187,7 @@ contract LoanAsset is ILoanAsset {
             lendersInfo[msg.sender].status !=
             LoanAssetLib.LenderStatusEnum.ENABLED
         ) {
-            revert("Only the lender can perform this action.");
+            revert("Only a enabled lender can perform this action.");
         }
         _;
     }
@@ -565,7 +567,8 @@ contract LoanAsset is ILoanAsset {
             MINIMUM_DENOMINATION_PER_SHARE);
         if (msg.value != amountToFund) {
             revert InvalidAmountToFund(
-                "Deposit amount must be greater than zero.",
+                "Invalid Deposit amount.",
+                amountToFund,
                 msg.value
             );
         }
