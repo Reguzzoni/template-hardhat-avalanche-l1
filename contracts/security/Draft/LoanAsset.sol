@@ -119,6 +119,8 @@ contract LoanAsset is ILoanAsset {
 
     uint256 public immutable MINIMUM_DENOMINATION_PER_SHARE;
 
+    string public IPFS_DOCUMENTATION_LINK;
+
     // LENDER
     address[] public lenders;
     mapping(address => LoanAssetLib.LenderInfo) public lendersInfo; // lenders info
@@ -221,6 +223,19 @@ contract LoanAsset is ILoanAsset {
         _;
     }
 
+    modifier whenLoanInterestType(
+        LoanAssetLib.InterestRateTypeEnum _interestRateType
+    ) {
+        if (INTEREST_RATE_TYPE != _interestRateType) {
+            revert InvalidValueInterestRateType(
+                "Invalid interest rate type.",
+                INTEREST_RATE_TYPE,
+                _interestRateType
+            );
+        }
+        _;
+    }
+
     // ##################################################################
     // ############################ EVENT ###############################
     // ##################################################################
@@ -233,7 +248,8 @@ contract LoanAsset is ILoanAsset {
     constructor(
         LoanAssetLib.LoanAnagInfo memory _loanAnagInfo,
         LoanAssetLib.LoanParticipantInfo memory _loanParticipantInfo,
-        LoanAssetLib.LoanPaymentInfo memory _loanPaymentInfo
+        LoanAssetLib.LoanPaymentInfo memory _loanPaymentInfo,
+        string memory _ipfsDocumentationLink
     ) {
         // check anag
 
@@ -287,7 +303,7 @@ contract LoanAsset is ILoanAsset {
         }
 
         // check minimum denomination
-        if (_loanPaymentInfo.minimumDenomination <= 0) {
+        if (_loanPaymentInfo.minimumDenomination == 0) {
             revert InvalidZeroValueError(
                 "Minimum denomination must be greater than zero."
             );
@@ -379,6 +395,8 @@ contract LoanAsset is ILoanAsset {
         INTEREST_RATE_TYPE = _loanAnagInfo.interestRateType;
         TOTAL_REPAYMENT_NUMBER = _loanPaymentInfo.repaymentsDates.length;
         MINIMUM_DENOMINATION_PER_SHARE = _loanPaymentInfo.minimumDenomination;
+
+        IPFS_DOCUMENTATION_LINK = _ipfsDocumentationLink;
 
         // set repayment dates
         uint256 repaymentsLength = _loanPaymentInfo.repaymentsDates.length; // gas optimization
@@ -543,8 +561,8 @@ contract LoanAsset is ILoanAsset {
         onlyEnabledLender
         whenLoanStatus(LoanAssetLib.LoanStatusEnum.PRELIMINARY)
     {
-        uint256 amountToFund = (lendersInfo[msg.sender].shares * TOTAL_AMOUNT) /
-            100;
+        uint256 amountToFund = (lendersInfo[msg.sender].shares *
+            MINIMUM_DENOMINATION_PER_SHARE);
         if (msg.value != amountToFund) {
             revert InvalidAmountToFund(
                 "Deposit amount must be greater than zero.",
@@ -596,15 +614,21 @@ contract LoanAsset is ILoanAsset {
 
     // set interest rate
     function updateInterestRateAndRepayments(
+        address[] calldata _borrowers,
         uint256[] calldata _interestRates
-    ) external onlyOwner whenLoanStatus(LoanAssetLib.LoanStatusEnum.LIVE) {
+    )
+        external
+        onlyOwner
+        whenLoanStatus(LoanAssetLib.LoanStatusEnum.LIVE)
+        whenLoanInterestType(LoanAssetLib.InterestRateTypeEnum.FLOATING)
+    {
         if (_interestRates.length == 0) {
             revert InvalidZeroLenghtError(
                 "Interest length IR must be greater than zero."
             );
         }
 
-        uint256 borrowersLength = borrowers.length; // gas optimization
+        uint256 borrowersLength = _borrowers.length; // gas optimization
 
         if (_interestRates.length != borrowersLength) {
             revert InvalidLenghtInterestRateForBorrower(
@@ -624,33 +648,11 @@ contract LoanAsset is ILoanAsset {
 
         // update interest rate
         for (uint256 borrowerIndex = 0; borrowerIndex < borrowersLength; ) {
-            address borrowerAddress = borrowers[borrowerIndex];
-
-            // set next repayment amount for each borrower
-            LoanAssetLib.OutstandingInfo
-                memory borrowerOutstandingInfo = borrowersOutstandingPrincipals[
-                    borrowerAddress
-                ];
-
-            uint256 nextRepaymentIndex = TOTAL_REPAYMENT_NUMBER -
-                borrowerOutstandingInfo.nextRepaymentIndex; // gas optimization
-
-            // if someone has already paid all the repayments, skip
-            if (nextRepaymentIndex >= TOTAL_REPAYMENT_NUMBER) {
-                unchecked {
-                    borrowerIndex++;
-                }
-                continue;
-            }
-
-            // update repayment info
-            borrowersRepayments[borrowerAddress][
-                nextRepaymentIndex
-            ] = LoanAssetLib.RepaymentInfo({
-                paymentDate: REPAYMENTS_DATES[nextRepaymentIndex],
-                interestRate: _interestRates[borrowerIndex],
-                status: LoanAssetLib.RepaymentStatusEnum.UNPAID
-            });
+            address borrowerAddress = _borrowers[borrowerIndex];
+            updateInterestRateByBorrower(
+                borrowerAddress,
+                _interestRates[borrowerIndex]
+            );
 
             unchecked {
                 borrowerIndex++;
@@ -658,6 +660,45 @@ contract LoanAsset is ILoanAsset {
         }
 
         emit UpdateInterestRateAndRepaymentsEvent(_interestRates);
+    }
+
+    function updateInterestRateByBorrower(
+        address _borrowerAddress,
+        uint256 _interestRate
+    )
+        public
+        onlyOwner
+        whenLoanStatus(LoanAssetLib.LoanStatusEnum.LIVE)
+        whenLoanInterestType(LoanAssetLib.InterestRateTypeEnum.FLOATING)
+    {
+        LoanAssetLib.BorrowerInfo memory borrowerInfo = borrowersInfo[
+            _borrowerAddress
+        ];
+
+        if (borrowerInfo.status != LoanAssetLib.BorrowerStatusEnum.ENABLED) {
+            revert InvalidValueBorrowerStatus(
+                "Borrower must be enabled.",
+                borrowerInfo.status,
+                LoanAssetLib.BorrowerStatusEnum.ENABLED
+            );
+        }
+
+        // set next repayment amount for each borrower
+        LoanAssetLib.OutstandingInfo
+            memory borrowerOutstandingInfo = borrowersOutstandingPrincipals[
+                _borrowerAddress
+            ];
+
+        // update repayment info
+        borrowersRepayments[_borrowerAddress][
+            borrowerOutstandingInfo.nextRepaymentIndex
+        ] = LoanAssetLib.RepaymentInfo({
+            paymentDate: REPAYMENTS_DATES[
+                borrowerOutstandingInfo.nextRepaymentIndex
+            ],
+            interestRate: _interestRate,
+            status: LoanAssetLib.RepaymentStatusEnum.UNPAID
+        });
     }
 
     // Borrower request to pay a repayment
@@ -970,8 +1011,9 @@ contract LoanAsset is ILoanAsset {
         onlyEnabledLender
         whenLoanStatus(LoanAssetLib.LoanStatusEnum.CLOSED)
     {
-        uint256 amountToWithDraw = (address(this).balance *
-            lendersInfo[msg.sender].shares) / 100;
+        // TODO switch to ERC20 and avoid the 1e18
+        uint256 amountToWithDraw = ((address(this).balance *
+            lendersInfo[msg.sender].shares) / 100) * 1e18;
         (bool success, ) = msg.sender.call{value: amountToWithDraw}("");
         if (!success) {
             revert InvalidACLBorrowerError("Transfer failed.", msg.sender);
